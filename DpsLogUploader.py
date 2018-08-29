@@ -82,7 +82,7 @@ class LogFilter:
     if len(self.bosses) == 0:
       self.bosses = searchBossName(bossList, "all")
     
-  def FilterLogs(self, root):
+  def filterLogs(self, root):
     ret = []
     start = self.startTime.timestamp()
     end   = self.endTime.timestamp()
@@ -136,7 +136,6 @@ def searchBossName(bossList, name):
     if group["Name"].lower() == name:
       return group["Bosses"]
   return None
-
 
 def uploadDpsReport(path, gen="rh"):
   dps_endpoint = "https://dps.report/uploadContent"
@@ -273,8 +272,7 @@ if "LogPath" not in config:
   sys.exit(0)
 
 filter = LogFilter(sys.argv, bossList)
-filter.FilterLogs
-uploadFiles = filter.FilterLogs(config["LogPath"])
+uploadFiles = filter.filterLogs(config["LogPath"])
 
 raidheroesLinks = []
 eliteinsightLinks = []
