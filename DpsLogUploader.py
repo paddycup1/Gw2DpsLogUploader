@@ -7,6 +7,7 @@ import sys
 import datetime
 from collections import OrderedDict
 import re
+import EvtcParser
 
 class LogFilter:
   def __init__(self, args, bossList):
@@ -16,9 +17,13 @@ class LogFilter:
     self.endTime = self.startTime.replace(hour=23, minute=59, second=59)
     self.last = False
     self.allTime = False
+    self.win = 0
+    self.sort = 0
+    self.sortReverse = False
+    self.embed = False
 
     while index < len(args):
-      if args[index] == "-b":
+      if args[index] == "-b" or args[index] == "-boss":
         index += 1
         while index < len(args) and not args[index].startswith("-"):
           self.bosses.extend(searchBossName(bossList, args[index]))
@@ -77,6 +82,26 @@ class LogFilter:
             secondsInAHour = 60 * 60
             self.startTime = datetime.datetime.fromtimestamp(self.endTime.timestamp() - secondsInAHour * int(match.group(1)))
           index += 1
+      elif args[index].lower() == "-win":
+        self.win = 1
+        index += 1
+      elif args[index].lower() == "-fail":
+        self.win = -1
+        index += 1
+      elif args[index].lower() == "-sort":
+        if args[index + 1].lower() == "time":
+          self.sort = 1
+        elif args[index + 1].lower() == "name":
+          self.sort = 2
+        index += 2
+      elif args[index].lower() == "-reverse":
+        self.sortReverse = True
+        index += 1
+      elif args[index].lower() == "-embed":
+        self.embed = True
+        self.title = args[index + 1]
+        self.description = args[index + 2]
+        index += 3
       else:
         index += 1
     if len(self.bosses) == 0:
@@ -93,7 +118,19 @@ class LogFilter:
       fileList = []
       for f in os.listdir(dirpath):
         if re.match(".+\\.evtc(\\.zip)?", f):
-          fileList.append(os.path.join(dirpath, f))
+          filepath = os.path.join(dirpath, f)
+          timestamp = os.path.getmtime(filepath)
+          if timestamp >= start and timestamp <= end:
+            print(filepath)
+            if self.win == 0:
+              fileList.append(filepath)
+            else:
+              evtc = EvtcParser.EvtcLog(filepath)
+              if self.win == 1 and evtc.cbtWin:
+                fileList.append(filepath)
+              elif self.win == -1 and not evtc.cbtWin:
+                fileList.append(filepath)
+             
       if len(fileList) == 0:
         continue
       if self.last:
@@ -110,11 +147,12 @@ class LogFilter:
         for log in fileList:
           ret.append(os.path.join(dirpath, log))
         continue
-      for log in fileList:
-        timestamp = os.path.getmtime(log)
-        if timestamp >= start and timestamp <= end:
-          ret.append(log)
 
+    if self.sort:
+      if self.sort == 1:
+        ret.sort(key=lambda path:os.path.getmtime(path))
+      elif self.sort == 2:
+        ret.sort()
     return ret
 
 
@@ -239,6 +277,18 @@ def isRaidarAcceptable(file, bossList):
       return boss["Gw2RaidarAcceptable"]
   return False
 
+def getRaidarBossAreas(token):
+  url = "https://www.gw2raidar.com/api/v2/areas"
+  headers = {
+    "Authorization": "Token " + token
+  }
+  response = requests.get(url, headers=headers)
+  if response.status_code == 200:
+    return response.json()
+  else:
+    print("Error: ", response.status_code, response.text)
+
+
 """
   Main Start
 """
@@ -293,18 +343,36 @@ asyncio.ensure_future(findAllRaidarLog(uploadFiles, config["Gw2RaidarToken"], bo
 loop.run_until_complete(fu)  
 raidarlinks = fu.result()  
 
-output = OrderedDict()
-output["Result"] = []
-
-for index in range(0, len(uploadFiles)):
-  pathComponent = uploadFiles[index].split(os.path.sep)
-  d = OrderedDict()
-  d["Boss"] = pathComponent[len(pathComponent) - 2]
-  d["File"] = pathComponent[len(pathComponent) - 1]
-  d["RaidHeroes"] = raidheroesLinks[index]
-  d["EliteInsight"] = eliteinsightLinks[index]
-  d["Raidar"] = raidarlinks["Results"][index]
-  output["Result"].append(d)
+if filter.embed:
+  output = OrderedDict()
+  output["title"] = filter.title
+  output["description"] = filter.description
+  output["color"] = 31743
+  output["thumbnail"] = dict([("url", "https://render.guildwars2.com/file/5866630DA52DCB5C423FB81ECF69FD071611E36B/1128644.png")])
+  output["fields"] = []
+  for index in range(0, len(uploadFiles)):
+    pathComponent = uploadFiles[index].split(os.path.sep)
+    d = OrderedDict()
+    d["name"] = pathComponent[len(pathComponent) - 2]
+    if raidheroesLinks[index]:
+      d["value"] = "[Raider]({}) | ".format(raidarlinks["Results"][index])
+    else:
+      d["value"] = "Raider | "
+    d["value"] += "[RaidHeroes]({}) | ".format(raidheroesLinks[index])
+    d["value"] += "[EliteInsight]({})".format(eliteinsightLinks[index])
+    output["fields"].append(d)
+else:
+  output = OrderedDict()
+  output["Result"] = []
+  for index in range(0, len(uploadFiles)):
+    pathComponent = uploadFiles[index].split(os.path.sep)
+    d = OrderedDict()
+    d["Boss"] = pathComponent[len(pathComponent) - 2]
+    d["File"] = pathComponent[len(pathComponent) - 1]
+    d["RaidHeroes"] = raidheroesLinks[index]
+    d["EliteInsight"] = eliteinsightLinks[index]
+    d["Raidar"] = raidarlinks["Results"][index]
+    output["Result"].append(d)
 
 with open("output.json", "w") as outfile:
   json.dump(output, outfile, indent=2)

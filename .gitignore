@@ -3,3 +3,4 @@ Config.json
 dps.report response sample.json
 Gw2RaidarEncounterList.json
 output.json
+/__pycache__
