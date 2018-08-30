@@ -248,16 +248,16 @@ try:
     config = json.load(configFile)
 except BaseException as e:
   print("load config fail:", str(e), "trying create a sample...")
-  with open("Config.json") as configFile:
+  with open("Config.json", "w") as configFile:
     config = dict([("LogPath", "arcdps combat log path"), ("Gw2RaidarToken", "use argument -raidarlogin username password to update this field")])
-    json.dump(config, configFile)
+    json.dump(config, configFile, indent=2)
     print("create sample config success.")
   sys.exit(0)
 
 if sys.argv[1] == "-raidarlogin":
   config["Gw2RaidarToken"] = gw2RaidarGetToken(sys.argv[2], sys.argv[3])
   with open("Config.json", "w") as configFile:
-    json.dump(config, configFile)
+    json.dump(config, configFile, indent=2)
   sys.exit(0)
 
 try:
