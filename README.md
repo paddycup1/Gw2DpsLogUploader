@@ -4,7 +4,7 @@ A command line tool used to pick specific log and upload to [Gw2Raidar](https://
 
 ## Initialize
 
-Install python 3.7.
+Install python 3.7.  
 Install `requests2` module: `pip3 install requests2`  
 Run `python DpsLogUploader.py -init username password`  
 username and password is used to get account token from Gw2Raidar.  
