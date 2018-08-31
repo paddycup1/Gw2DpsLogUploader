@@ -1,45 +1,9 @@
 {
   "Bosses": [{
-      "Name": "Arkk",
+      "Name": "Vale Guardian",
       "Aliases": [
-        "100CM-3"
-      ],
-      "Gw2RaidarAcceptable": true
-    },
-    {
-      "Name": "Artsariiv",
-      "Aliases": [
-        "100CM-2"
-      ],
-      "Gw2RaidarAcceptable": true
-    },
-    {
-      "Name": "Cairn the Indomitable",
-      "Aliases": [
-        "4-1",
-        "Cairn"
-      ],
-      "Gw2RaidarAcceptable": true
-    },
-    {
-      "Name": "Deimos",
-      "Aliases": [
-        "4-4"
-      ],
-      "Gw2RaidarAcceptable": true
-    },
-    {
-      "Name": "Dhuum",
-      "Aliases": [
-        "5-4"
-      ],
-      "Gw2RaidarAcceptable": true
-    },
-    {
-      "Name": "Ensolyss of the Endless Torment",
-      "Aliases": [
-        "99CM-3",
-        "Ensolyss"
+        "1-1",
+        "VG"
       ],
       "Gw2RaidarAcceptable": true
     },
@@ -52,22 +16,16 @@
       "Gw2RaidarAcceptable": true
     },
     {
-      "Name": "Keep Construct",
+      "Name": "Sabetha the Saboteur",
       "Aliases": [
-        "3-2",
-        "KC"
+        "1-3"
       ],
       "Gw2RaidarAcceptable": true
     },
     {
-      "Name": "Large Kitty Golem",
-      "Aliases": [],
-      "Gw2RaidarAcceptable": false
-    },
-    {
-      "Name": "MAMA",
+      "Name": "Slothasor",
       "Aliases": [
-        "99CM-1"
+        "2-1"
       ],
       "Gw2RaidarAcceptable": true
     },
@@ -81,10 +39,68 @@
       "Gw2RaidarAcceptable": true
     },
     {
+      "Name": "Keep Construct",
+      "Aliases": [
+        "3-2",
+        "KC"
+      ],
+      "Gw2RaidarAcceptable": true
+    },
+    {
+      "Name": "Xera",
+      "Aliases": [
+        "3-3"
+      ],
+      "Gw2RaidarAcceptable": true
+    },
+    {
+      "Name": "Cairn the Indomitable",
+      "Aliases": [
+        "4-1",
+        "Cairn"
+      ],
+      "Gw2RaidarAcceptable": true
+    },
+    {
       "Name": "Mursaat Overseer",
       "Aliases": [
         "4-2",
         "MO"
+      ],
+      "Gw2RaidarAcceptable": true
+    },
+    {
+      "Name": "Samarog",
+      "Aliases": [
+        "4-3"
+      ],
+      "Gw2RaidarAcceptable": true
+    },
+    {
+      "Name": "Deimos",
+      "Aliases": [
+        "4-4"
+      ],
+      "Gw2RaidarAcceptable": true
+    },
+    {
+      "Name": "Soulless Horror",
+      "Aliases": [
+        "5-1"
+      ],
+      "Gw2RaidarAcceptable": true
+    },
+    {
+      "Name": "Dhuum",
+      "Aliases": [
+        "5-4"
+      ],
+      "Gw2RaidarAcceptable": true
+    },
+    {
+      "Name": "MAMA",
+      "Aliases": [
+        "99CM-1"
       ],
       "Gw2RaidarAcceptable": true
     },
@@ -97,16 +113,10 @@
       "Gw2RaidarAcceptable": true
     },
     {
-      "Name": "Sabetha the Saboteur",
+      "Name": "Ensolyss of the Endless Torment",
       "Aliases": [
-        "1-3"
-      ],
-      "Gw2RaidarAcceptable": true
-    },
-    {
-      "Name": "Samarog",
-      "Aliases": [
-        "4-3"
+        "99CM-3",
+        "Ensolyss"
       ],
       "Gw2RaidarAcceptable": true
     },
@@ -118,38 +128,28 @@
       "Gw2RaidarAcceptable": true
     },
     {
-      "Name": "Slothasor",
+      "Name": "Artsariiv",
       "Aliases": [
-        "2-1"
+        "100CM-2"
       ],
       "Gw2RaidarAcceptable": true
     },
     {
-      "Name": "Soulless Horror",
+      "Name": "Arkk",
       "Aliases": [
-        "5-1"
+        "100CM-3"
       ],
       "Gw2RaidarAcceptable": true
+    },
+    {
+      "Name": "Large Kitty Golem",
+      "Aliases": [],
+      "Gw2RaidarAcceptable": false
     },
     {
       "Name": "Standard Kitty Golem",
       "Aliases": [
         "StdGolem"
-      ],
-      "Gw2RaidarAcceptable": true
-    },
-    {
-      "Name": "Vale Guardian",
-      "Aliases": [
-        "1-1",
-        "VG"
-      ],
-      "Gw2RaidarAcceptable": true
-    },
-    {
-      "Name": "Xera",
-      "Aliases": [
-        "3-3"
       ],
       "Gw2RaidarAcceptable": true
     }

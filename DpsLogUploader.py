@@ -1,4 +1,4 @@
-import requests
+import requests  #pip3 install requests2
 import json
 import os
 import threading
@@ -9,41 +9,49 @@ from collections import OrderedDict
 import re
 import EvtcParser
 
-class LogFilter:
+class ArgParser:
+  SECONDS_IN_HOUR = 60 * 60
+  SECONDS_IN_DAY  = 24 * 60 * 60
   def __init__(self, args, bossList):
-    index = 0
     self.bosses = []
-    self.startTime = datetime.datetime.now().replace(hour=0, minute=0, second=0)
-    self.endTime = self.startTime.replace(hour=23, minute=59, second=59)
-    self.last = False
+    self.startTime = datetime.datetime.now()
+    self.endTime = datetime.datetime.fromtimestamp(self.startTime.timestamp() - ArgParser.SECONDS_IN_DAY)
+    self.last = True
     self.allTime = False
     self.win = 0
     self.sort = 0
     self.sortReverse = False
     self.embed = False
+    self.outputPath = "output.json"
+    self.rh = True
+    self.ei = True
+    self.raidar = True
 
+    for index in range(0, len(args)):
+      args[index] = args[index].lower()
+
+    index = 0
     while index < len(args):
       if args[index] == "-b" or args[index] == "-boss":
         index += 1
         while index < len(args) and not args[index].startswith("-"):
           self.bosses.extend(searchBossName(bossList, args[index]))
           index += 1
-      elif args[index].lower() == "-today":
+      elif args[index] == "-today":
         self.startTime = datetime.datetime.now().replace(hour=0, minute=0, second=0)
         self.endTime = datetime.datetime.now().replace(hour=23, minute=59, second=59)
         index += 1
-      elif args[index].lower() == "-yesterday":
-        secondsInADay = 24 * 60 * 60
-        self.startTime = datetime.datetime.fromtimestamp(datetime.datetime.now().timestamp - secondsInADay).replace(hour=0, minute=0, second=0)
+      elif args[index] == "-yesterday":
+        self.startTime = datetime.datetime.fromtimestamp(datetime.datetime.now().timestamp - ArgParser.SECONDS_IN_DAY).replace(hour=0, minute=0, second=0)
         self.endTime = self.startTime.replace(hour=23, minute=59, second=59)
         index += 1
-      elif args[index].lower() == "-last":
+      elif args[index] == "-last":
         self.last = True
         index += 1
-      elif args[index].lower() == "-allTime":
+      elif args[index] == "-alltime":
         self.allTime = True
         index += 1
-      elif args[index].lower() == "-starttime":
+      elif args[index] == "-starttime" or args[index] == "-start":
         index += 1
         while index < len(args) and not args[index].startswith("-"):
           match = re.match("(\\d+)/(\\d+)/(\\d+)", args[index])
@@ -56,7 +64,7 @@ class LogFilter:
           if match:
             self.startTime = self.startTime.replace(hour=int(match.group(1)), minute=int(match.group(2)), second=0)
           index += 1
-      elif args[index].lower() == "-endtime":
+      elif args[index] == "-endtime" or args[index] == "-end":
         index += 1
         while index < len(args) and not args[index].startswith("-"):
           match = re.match("(\\d+)/(\\d+)/(\\d+)", args[index])
@@ -69,39 +77,64 @@ class LogFilter:
           if match:
             self.endTime = self.endTime.replace(hour=int(match.group(1)), minute=int(match.group(2)), second=0)
           index += 1
-      elif args[index].lower() == "-past":
+      elif args[index] == "-past":
         index += 1
         self.endTime = datetime.datetime.now()
         while index < len(args) and not args[index].startswith("-"):
           match = re.match("(\\d+)(d|D)", args[index])
           if match:
-            secondsInADay = 24 * 60 * 60
-            self.startTime = datetime.datetime.fromtimestamp(self.endTime.timestamp() - secondsInADay * int(match.group(1))).replace(hour=0, minute=0, second=0)
+            self.startTime = datetime.datetime.fromtimestamp(self.endTime.timestamp() - ArgParser.SECONDS_IN_DAY * int(match.group(1)))
           match = re.match("(\\d+)(h|H)", args[index])
           if match:
-            secondsInAHour = 60 * 60
-            self.startTime = datetime.datetime.fromtimestamp(self.endTime.timestamp() - secondsInAHour * int(match.group(1)))
+            self.startTime = datetime.datetime.fromtimestamp(self.endTime.timestamp() - ArgParser.SECONDS_IN_HOUR * int(match.group(1)))
           index += 1
-      elif args[index].lower() == "-win":
+      elif args[index] == "-win":
         self.win = 1
         index += 1
-      elif args[index].lower() == "-fail":
+      elif args[index] == "-fail":
         self.win = -1
         index += 1
-      elif args[index].lower() == "-sort":
-        if args[index + 1].lower() == "time":
+      elif args[index] == "-sort":
+        if args[index + 1] == "time":
           self.sort = 1
-        elif args[index + 1].lower() == "name":
+        elif args[index + 1] == "name":
           self.sort = 2
+        elif args[index + 1] == "encounter":
+          self.sort = 3
+        else:
+          print("Invalid sort type!!")
+          sys.exit(0)
         index += 2
-      elif args[index].lower() == "-reverse":
+      elif args[index] == "-reverse":
         self.sortReverse = True
         index += 1
-      elif args[index].lower() == "-embed":
+      elif args[index] == "-o":
+        self.outputPath = args[index + 1]
+        index += 2
+      elif args[index] == "-embed":
         self.embed = True
         self.title = args[index + 1]
-        self.description = args[index + 2]
+        if index + 2 < len(args) and not args[index + 2].startswith("-"):
+          self.description = args[index + 2]
+        else:
+          self.description = ""
         index += 3
+      elif args[index] == "-gen":
+        index += 1
+        self.rh = False
+        self.ei = False
+        self.raidar = False
+        while index < len(args) and not args[index].startswith("-"):
+          if args[index] == "rh" or args[index] == "raidheroes":
+            self.rh = True
+          elif args[index] == "ei" or args[index] == "eilteinsight":
+            self.ei = True
+          elif args[index] == "rd" or args[index] == "raidar":
+            self.raidar = True
+          index += 1
+        if not (self.rh or self.ei or self.raidar):
+          print("No generator selected!!")
+          sys.exit(0)
       else:
         index += 1
     if len(self.bosses) == 0:
@@ -120,17 +153,16 @@ class LogFilter:
         if re.match(".+\\.evtc(\\.zip)?", f):
           filepath = os.path.join(dirpath, f)
           timestamp = os.path.getmtime(filepath)
-          if timestamp >= start and timestamp <= end:
-            print(filepath)
+          if (timestamp >= start and timestamp <= end) or self.allTime:
             if self.win == 0:
               fileList.append(filepath)
             else:
+              print("Parsing {} log {}...".format(boss, f))
               evtc = EvtcParser.EvtcLog(filepath)
               if self.win == 1 and evtc.cbtWin:
                 fileList.append(filepath)
               elif self.win == -1 and not evtc.cbtWin:
                 fileList.append(filepath)
-             
       if len(fileList) == 0:
         continue
       if self.last:
@@ -148,16 +180,27 @@ class LogFilter:
           ret.append(os.path.join(dirpath, log))
         continue
 
+    if self.win != 0:
+      print("\n", end="")
+
     if self.sort:
       if self.sort == 1:
         ret.sort(key=lambda path:os.path.getmtime(path))
       elif self.sort == 2:
         ret.sort()
+      elif self.sort == 3:
+        ret.sort(key=getBossOrder)
     return ret
 
 
+def getBossOrder(boss):
+  for index in range(0, len(bossList["Bosses"])):
+    if bossList["Bosses"][index]["Name"] == boss:
+      return index
+  return 0
+
+
 def searchBossName(bossList, name):
-  name = name.lower()
   if name == "all":
     ret = []
     for boss in bossList["Bosses"]:
@@ -293,13 +336,30 @@ def getRaidarBossAreas(token):
   Main Start
 """
 
+if sys.argv[1] == "-init":
+  raidarToken = gw2RaidarGetToken(sys.argv[2], sys.argv[3])
+  if not raidarToken:
+    print("Get GW2 Raidar token fail, please chekck username and password then use command \"-raidarlogin\" update config file.")
+  config = dict([ 
+    ("LogPath", "arcdps combat log path"),
+    ("Gw2RaidarToken", raidarToken),
+    ("DiscordBotToken", "Token used by discord embed helper bot, optional")
+  ])
+  with open("Config.json", "w") as configFile:
+    json.dump(config, configFile, indent=2)
+  print("Initialize config complete, but please update LogPath and DiscordBotToken (optional) manually")
+  sys.exit(0)
+
 try:
   with open("Config.json", "r") as configFile:
     config = json.load(configFile)
 except BaseException as e:
   print("load config fail:", str(e), "trying create a sample...")
   with open("Config.json", "w") as configFile:
-    config = dict([("LogPath", "arcdps combat log path"), ("Gw2RaidarToken", "use argument -raidarlogin username password to update this field")])
+    config = dict([
+      ("LogPath", "arcdps combat log path"),
+      ("Gw2RaidarToken", "use command -raidarlogin username password to update this field"),
+      ("DiscordBotToken", "Token used by discord embed helper bot, optional")])
     json.dump(config, configFile, indent=2)
     print("create sample config success.")
   sys.exit(0)
@@ -321,32 +381,34 @@ if "LogPath" not in config:
   print("Can't find arcdps log path in config file! (field name: LogPath)")
   sys.exit(0)
 
-filter = LogFilter(sys.argv, bossList)
-uploadFiles = filter.filterLogs(config["LogPath"])
+argParser = ArgParser(sys.argv, bossList)
+uploadFiles = argParser.filterLogs(config["LogPath"])
 
 raidheroesLinks = []
 eliteinsightLinks = []
+if argParser.raidar:
+  for log in uploadFiles:
+    if isRaidarAcceptable(log, bossList):
+      uploadGw2Raidar(log, config["Gw2RaidarToken"])
+  print("\n", end="")
 
 for log in uploadFiles:
-  if isRaidarAcceptable(log, bossList):
-    uploadGw2Raidar(log, config["Gw2RaidarToken"])
-print("\n", end="")
-
-for log in uploadFiles:
-  raidheroesLinks.append(uploadDpsReport(log, gen="rh"))
-  eliteinsightLinks.append(uploadDpsReport(log, gen="ei"))
+  if argParser.rh:
+    raidheroesLinks.append(uploadDpsReport(log, gen="rh"))
+  if argParser.ei:
+    eliteinsightLinks.append(uploadDpsReport(log, gen="ei"))
   
+if argParser.raidar:
+  loop = asyncio.get_event_loop()
+  fu = asyncio.Future()
+  asyncio.ensure_future(findAllRaidarLog(uploadFiles, config["Gw2RaidarToken"], bossList, fu))
+  loop.run_until_complete(fu)
+  raidarlinks = fu.result()
 
-loop = asyncio.get_event_loop()
-fu = asyncio.Future()
-asyncio.ensure_future(findAllRaidarLog(uploadFiles, config["Gw2RaidarToken"], bossList, fu))
-loop.run_until_complete(fu)  
-raidarlinks = fu.result()  
-
-if filter.embed:
+if argParser.embed:
   output = OrderedDict()
-  output["title"] = filter.title
-  output["description"] = filter.description
+  output["title"] = argParser.title
+  output["description"] = argParser.description
   output["color"] = 31743
   output["thumbnail"] = dict([("url", "https://render.guildwars2.com/file/5866630DA52DCB5C423FB81ECF69FD071611E36B/1128644.png")])
   output["fields"] = []
@@ -354,12 +416,21 @@ if filter.embed:
     pathComponent = uploadFiles[index].split(os.path.sep)
     d = OrderedDict()
     d["name"] = pathComponent[len(pathComponent) - 2]
-    if raidheroesLinks[index]:
-      d["value"] = "[Raider]({}) | ".format(raidarlinks["Results"][index])
-    else:
-      d["value"] = "Raider | "
-    d["value"] += "[RaidHeroes]({}) | ".format(raidheroesLinks[index])
-    d["value"] += "[EliteInsight]({})".format(eliteinsightLinks[index])
+    value = []
+    if argParser.raidar:
+      if raidheroesLinks[index]:
+        value.append("[Raider]({})".format(raidarlinks["Results"][index]))
+      else:
+        value.append("~~Raider~~")
+    if argParser.rh:
+      value.append("[RaidHeroes]({})".format(raidheroesLinks[index]))
+    if argParser.ei:
+      value.append("[EliteInsight]({})".format(eliteinsightLinks[index]))
+    
+    d["value"] = value[0]
+    for i in range(1, len(value)):
+      d["value"] += " | "
+      d["value"] += value[i]
     output["fields"].append(d)
 else:
   output = OrderedDict()
@@ -369,12 +440,20 @@ else:
     d = OrderedDict()
     d["Boss"] = pathComponent[len(pathComponent) - 2]
     d["File"] = pathComponent[len(pathComponent) - 1]
-    d["RaidHeroes"] = raidheroesLinks[index]
-    d["EliteInsight"] = eliteinsightLinks[index]
-    d["Raidar"] = raidarlinks["Results"][index]
+    if argParser.rh:
+      d["RaidHeroes"] = raidheroesLinks[index]
+    if argParser.ei:
+      d["EliteInsight"] = eliteinsightLinks[index]
+    if argParser.raidar:
+      d["Raidar"] = raidarlinks["Results"][index]
     output["Result"].append(d)
 
-with open("output.json", "w") as outfile:
-  json.dump(output, outfile, indent=2)
+try:
+  if len(os.path.dirname(argParser.outputPath)) > 0 and not os.path.exists(os.path.dirname(argParser.outputPath)):
+    os.makedirs(os.path.dirname(argParser.outputPath))
+  with open(argParser.outputPath, "w") as outfile:
+    json.dump(output, outfile, indent=2)
+except IOError as e:
+  print("write output file fail:", str(e))
 
 print("All complete.")

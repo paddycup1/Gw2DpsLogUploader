@@ -71,15 +71,15 @@ class GwLanguage:
 class Agent:
   LEN = 96
   def __init__(self, bytes):
-    self.addr = int.from_bytes(bytes[0:8], byteorder="little", signed=False)
-    self.porf = int.from_bytes(bytes[8:12], byteorder="little", signed=False)
-    self.isElite = int.from_bytes(bytes[12:16], byteorder="little", signed=False)
-    self.toughness = int.from_bytes(bytes[16:18], byteorder="little", signed=False)
+    self.addr          = int.from_bytes(bytes[0:8], byteorder="little", signed=False)
+    self.porf          = int.from_bytes(bytes[8:12], byteorder="little", signed=False)
+    self.isElite       = int.from_bytes(bytes[12:16], byteorder="little", signed=False)
+    self.toughness     = int.from_bytes(bytes[16:18], byteorder="little", signed=False)
     self.concentration = int.from_bytes(bytes[18:20], byteorder="little", signed=False)
-    self.healing = int.from_bytes(bytes[20:22], byteorder="little", signed=False)
-    self.pad1 = int.from_bytes(bytes[22:24], byteorder="little", signed=False)
-    self.condition = int.from_bytes(bytes[24:26], byteorder="little", signed=False)
-    self.pad2 = int.from_bytes(bytes[26:28], byteorder="little", signed=False)
+    self.healing       = int.from_bytes(bytes[20:22], byteorder="little", signed=False)
+    self.pad1          = int.from_bytes(bytes[22:24], byteorder="little", signed=False)
+    self.condition     = int.from_bytes(bytes[24:26], byteorder="little", signed=False)
+    self.pad2          = int.from_bytes(bytes[26:28], byteorder="little", signed=False)
     names = bytes[28:92].decode("utf8").split("\x00")
     self.name = names[0]
     if self.isPlayer:
@@ -110,7 +110,7 @@ class Agent:
     return True
   
   @property
-  def sepcialId(self):
+  def specialID(self):
     return self.porf & 0xFFFF
 
 
@@ -124,73 +124,73 @@ class Skill:
 class CombatEvent0:
   LEN = 8 * 3 + 4 * 2 + 2 * 5 + 22
   def __init__(self, bytes):
-    self.time = int.from_bytes(bytes[0:8], byteorder="little", signed=False)                 #8 byte
-    self.src_agent = int.from_bytes(bytes[8:16], byteorder="little", signed=False)           #8 byte
-    self.dst_agent = int.from_bytes(bytes[16:24], byteorder="little", signed=False)          #8 byte
-    self.value = int.from_bytes(bytes[24:28], byteorder="little", signed=False)              #4 byte
-    self.buff_dmg = int.from_bytes(bytes[28:32], byteorder="little", signed=False)           #4 byte
-    self.overstack_value = int.from_bytes(bytes[32:34], byteorder="little", signed=False)    #2 byte
-    self.skillid = int.from_bytes(bytes[34:36], byteorder="little", signed=False)            #2 byte
-    self.src_instid = int.from_bytes(bytes[36:38], byteorder="little", signed=False)         #2 byte
-    self.dst_instid = int.from_bytes(bytes[38:40], byteorder="little", signed=False)         #2 byte
-    self.src_master_instid = int.from_bytes(bytes[40:42], byteorder="little", signed=False)  #2 byte
-    self.iss_offset = int(bytes[42])
-    self.iss_offset_target = int(bytes[43])
-    self.iss_bd_offset = int(bytes[44])
-    self.iss_bd_offset_target = int(bytes[45])
-    self.iss_alt_offset = int(bytes[46])
+    self.time                  = int.from_bytes(bytes[0:8], byteorder="little", signed=False)    #8 byte
+    self.src_agent             = int.from_bytes(bytes[8:16], byteorder="little", signed=False)   #8 byte
+    self.dst_agent             = int.from_bytes(bytes[16:24], byteorder="little", signed=False)  #8 byte
+    self.value                 = int.from_bytes(bytes[24:28], byteorder="little", signed=False)  #4 byte
+    self.buff_dmg              = int.from_bytes(bytes[28:32], byteorder="little", signed=False)  #4 byte
+    self.overstack_value       = int.from_bytes(bytes[32:34], byteorder="little", signed=False)  #2 byte
+    self.skillid               = int.from_bytes(bytes[34:36], byteorder="little", signed=False)  #2 byte
+    self.src_instid            = int.from_bytes(bytes[36:38], byteorder="little", signed=False)  #2 byte
+    self.dst_instid            = int.from_bytes(bytes[38:40], byteorder="little", signed=False)  #2 byte
+    self.src_master_instid     = int.from_bytes(bytes[40:42], byteorder="little", signed=False)  #2 byte
+    self.iss_offset            = int(bytes[42])
+    self.iss_offset_target     = int(bytes[43])
+    self.iss_bd_offset         = int(bytes[44])
+    self.iss_bd_offset_target  = int(bytes[45])
+    self.iss_alt_offset        = int(bytes[46])
     self.iss_alt_offset_target = int(bytes[47])
-    self.skar = int(bytes[48])
-    self.skar_alt = int(bytes[49])
-    self.skar_use_alt = int(bytes[50])
-    self.iff = int(bytes[51])
-    self.buff = int(bytes[52])
-    self.result = int(bytes[53])
-    self.is_activation = int(bytes[54])
-    self.is_buffremove = int(bytes[55])
-    self.is_ninety = int(bytes[56])
-    self.is_fifty = int(bytes[57])
-    self.is_moving = int(bytes[58])
-    self.is_statechange = int(bytes[59])
-    self.is_flanking = int(bytes[60])
-    self.is_shields = int(bytes[61])
-    self.is_offcycle = int(bytes[62])
-    self.pad64 = int(bytes[63])
+    self.skar                  = int(bytes[48])
+    self.skar_alt              = int(bytes[49])
+    self.skar_use_alt          = int(bytes[50])
+    self.iff                   = int(bytes[51])
+    self.buff                  = int(bytes[52])
+    self.result                = int(bytes[53])
+    self.is_activation         = int(bytes[54])
+    self.is_buffremove         = int(bytes[55])
+    self.is_ninety             = int(bytes[56])
+    self.is_fifty              = int(bytes[57])
+    self.is_moving             = int(bytes[58])
+    self.is_statechange        = int(bytes[59])
+    self.is_flanking           = int(bytes[60])
+    self.is_shields            = int(bytes[61])
+    self.is_offcycle           = int(bytes[62])
+    self.pad64                 = int(bytes[63])
 
 class CombatEvent1:
   LEN = 8 * 3 + 4 * 4 + 2 * 4 + 16
   def __init__(self, bytes):
     self.time = int.from_bytes(bytes[0:8], byteorder="little", signed=False)                 #8 byte
-    self.src_agent = int.from_bytes(bytes[8:16], byteorder="little", signed=False)           #8 byte
-    self.dst_agent = int.from_bytes(bytes[16:24], byteorder="little", signed=False)          #8 byte
-    self.value = int.from_bytes(bytes[24:28], byteorder="little", signed=True)               #4 byte
-    self.buff_dmg = int.from_bytes(bytes[28:32], byteorder="little", signed=True)            #4 byte
-    self.overstack_value = int.from_bytes(bytes[32:36], byteorder="little", signed=False)    #4 byte
-    self.skillid = int.from_bytes(bytes[36:40], byteorder="little", signed=False)            #4 byte
-    self.src_instid = int.from_bytes(bytes[40:42], byteorder="little", signed=False)         #2 byte
-    self.dst_instid = int.from_bytes(bytes[42:44], byteorder="little", signed=False)         #2 byte
+    self.src_agent         = int.from_bytes(bytes[8:16], byteorder="little", signed=False)   #8 byte
+    self.dst_agent         = int.from_bytes(bytes[16:24], byteorder="little", signed=False)  #8 byte
+    self.value             = int.from_bytes(bytes[24:28], byteorder="little", signed=True)   #4 byte
+    self.buff_dmg          = int.from_bytes(bytes[28:32], byteorder="little", signed=True)   #4 byte
+    self.overstack_value   = int.from_bytes(bytes[32:36], byteorder="little", signed=False)  #4 byte
+    self.skillid           = int.from_bytes(bytes[36:40], byteorder="little", signed=False)  #4 byte
+    self.src_instid        = int.from_bytes(bytes[40:42], byteorder="little", signed=False)  #2 byte
+    self.dst_instid        = int.from_bytes(bytes[42:44], byteorder="little", signed=False)  #2 byte
     self.src_master_instid = int.from_bytes(bytes[44:46], byteorder="little", signed=False)  #2 byte
     self.dst_master_instid = int.from_bytes(bytes[46:48], byteorder="little", signed=False)  #2 byte
-    self.iff = int(bytes[48])
-    self.buff = int(bytes[49])
-    self.result = int(bytes[50])
-    self.is_activation = int(bytes[51])
-    self.is_buffremove = int(bytes[52])
-    self.is_ninety = int(bytes[53])
-    self.is_fifty = int(bytes[54])
-    self.is_moving = int(bytes[55])
-    self.is_statechange = int(bytes[56])
-    self.is_flanking = int(bytes[57])
-    self.is_shields = int(bytes[58])
-    self.is_offcycle = int(bytes[59])
-    self.pad61 = int(bytes[60])
-    self.pad62 = int(bytes[61])
-    self.pad63 = int(bytes[62])
-    self.pad63 = int(bytes[63])
+    self.iff               = int(bytes[48])
+    self.buff              = int(bytes[49])
+    self.result            = int(bytes[50])
+    self.is_activation     = int(bytes[51])
+    self.is_buffremove     = int(bytes[52])
+    self.is_ninety         = int(bytes[53])
+    self.is_fifty          = int(bytes[54])
+    self.is_moving         = int(bytes[55])
+    self.is_statechange    = int(bytes[56])
+    self.is_flanking       = int(bytes[57])
+    self.is_shields        = int(bytes[58])
+    self.is_offcycle       = int(bytes[59])
+    self.pad61             = int(bytes[60])
+    self.pad62             = int(bytes[61])
+    self.pad63             = int(bytes[62])
+    self.pad63             = int(bytes[63])
 
 
 class EvtcLog:
-  def __init__(self, filepath):
+  def __init__(self, filepath, headeronly=False):
     if zipfile.is_zipfile(filepath):
       with zipfile.ZipFile(filepath) as zipFile:
         namelist = zipFile.namelist()
@@ -209,38 +209,44 @@ class EvtcLog:
     self.dateText = self.fileContent[4:12].decode("ascii")
     self.revision = int(self.fileContent[12])
     self.bossId = int.from_bytes(self.fileContent[13:15], byteorder="little", signed=False)
+    if not headeronly:
+      self.cbtWin = False
 
-    self.agentCount = int.from_bytes(self.fileContent[16:20], byteorder="little", signed=False)
-    self.agents = []
-    count = 0
-    i = 20
-    while count < self.agentCount:
-      count += 1
-      self.agents.append(Agent(self.fileContent[i:i + Agent.LEN]))
-      i += Agent.LEN
+      self.agentCount = int.from_bytes(self.fileContent[16:20], byteorder="little", signed=False)
+      self.agents = []
+      count = 0
+      i = 20
+      playersAddr = []
+      while count < self.agentCount:
+        count += 1
+        agent = Agent(self.fileContent[i:i + Agent.LEN])
+        self.agents.append(agent)
+        if agent.isPlayer:
+          playersAddr.append(agent.addr)
+        i += Agent.LEN
 
-    self.skillCount = int.from_bytes(self.fileContent[i:i + 4], byteorder="little", signed=False)
-    i += 4
-    count = 0
-    self.skills = []
-    while count < self.skillCount:
-      count += 1
-      self.skills.append(Skill(self.fileContent[i:i + Skill.LEN]))
-      i += Skill.LEN
-    self.combatEvents = []
-    if self.revision == 0:
-      while i < len(self.fileContent) and i + CombatEvent0.LEN < len(self.fileContent):
-        self.combatEvents.append(CombatEvent0(self.fileContent[i:i + CombatEvent0.LEN]))
-        i += CombatEvent0.LEN
-    else:
-      while i < len(self.fileContent) and i + CombatEvent1.LEN < len(self.fileContent):
-        self.combatEvents.append(CombatEvent1(self.fileContent[i:i + CombatEvent1.LEN]))
-        i += CombatEvent1.LEN
-    for agent in self.agents:
-      if agent.isNpc:
-        if agent.sepcialId == self.bossId:
-          bossAddr = agent.addr
-    self.cbtWin = False
-    for event in self.combatEvents:
-      if event.is_statechange == CbtStateChange.CBTS_CHANGEDEAD and event.src_agent == bossAddr:
+      self.skillCount = int.from_bytes(self.fileContent[i:i + 4], byteorder="little", signed=False)
+      i += 4
+      count = 0
+      self.skills = []
+      while count < self.skillCount:
+        count += 1
+        self.skills.append(Skill(self.fileContent[i:i + Skill.LEN]))
+        i += Skill.LEN
+      self.combatEvents = []
+      if self.revision == 0:
+        while i < len(self.fileContent) and i + CombatEvent0.LEN < len(self.fileContent):
+          self.combatEvents.append(CombatEvent0(self.fileContent[i:i + CombatEvent0.LEN]))
+          i += CombatEvent0.LEN
+      else:
+        while i < len(self.fileContent) and i + CombatEvent1.LEN < len(self.fileContent):
+          self.combatEvents.append(CombatEvent1(self.fileContent[i:i + CombatEvent1.LEN]))
+          i += CombatEvent1.LEN
+      for event in self.combatEvents:
+        if event.is_statechange == CbtStateChange.CBTS_CHANGEDEAD:
+          for addr in playersAddr:
+            if event.src_agent == addr:
+              playersAddr.remove(addr)
+              break
+      if len(playersAddr) != 0:
         self.cbtWin = True
