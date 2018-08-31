@@ -25,8 +25,8 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
 * `-boss name1 name2 ...` (`-b`) : Select bosses names need to be uploaded. Use names or alias defined in `BossList.json`.Bosses, or use group name defined in `BossList.json`.Groups to select multiple boss.  
 
 ### Select time section
-* `-starttime yy/mm/dd [h:m:s]` (`-start`) : Select start point of target time section.
-* `-endtime yy/mm/dd [h:m:s]` (`-end`) : Select end point of target time section.
+* `-starttime yy/mm/dd [h:m[:s]]` (`-start`) : Select start point of target time section.
+* `-endtime yy/mm/dd [h:m[:s]]` (`-end`) : Select end point of target time section.
 * `-past 5h` or `-past 8d` : Select target time section from now back to given duration.
 * `-today` : Select target time section from current day 00:00:00 to 23:59:59.
 * `-yesterday` : Select target time section from yesterday day 00:00:00 to 23:59:59.
@@ -51,8 +51,8 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
 #### Upload today's fotm log and sort by encounter level
 `python DpsLogUploader.py -b fotms -past 1d -win -sort encounter`
 
-#### Upload all success raid log in this week and sort result with fight time
-`python DpsLogUploader.py -b raids -past 7d -win -sort time`
+#### Upload all success raid log in August and sort result with fight time
+`python DpsLogUploader.py -b raids -start 2018/8/1 -end 2018/8/31 -win -sort time`
 
 #### Upload all raid wing 4 log to Gw2Raidar and Raid Heroes
 `python DpsLogUploader.py -b W4 -alltime -gen rd rh`
