@@ -68,7 +68,8 @@ You can customer boss alias by edit this file,
       "Aliases": [
         "Any aliases you want, any name defined here can be used in -boss arguments"
       ],
-      "Gw2RaidarAcceptable": true //If the boss can't be analyzed by Gw2Raidar, this filed should set to false. Or the upload tool will try to find this boss in Gw2Raidar encounter list after upload complete.
+      "Gw2RaidarAcceptable": true,
+      "This is comment for Gw2RaidarAcceptable": "If the boss can't be analyzed by Gw2Raidar, Gw2RaidarAcceptable filed should set to false. Or the upload tool will try to find this boss in Gw2Raidar encounter list after upload complete."
     }
   ],
   "Groups": [
