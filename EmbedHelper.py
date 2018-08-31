@@ -14,17 +14,25 @@ async def on_ready():
 
 @bot.command()
 async def embed(ctx):
-  if len(sys.argv) > 1:
-    with open(sys.argv[1], "r") as inputFile:
-      embed = json.load(inputFile)
-  else:
-    embed = json.loads(ctx.message.content[7:])
+  embed = json.loads(ctx.message.content[7:])
   if "author" not in embed:
     embed["author"] = dict()
     embed["author"]["name"] = ctx.message.author.display_name
     embed["author"]["icon_url"] = ctx.message.author.avatar_url        
   await ctx.message.delete()        
   await ctx.send(embed = discord.Embed.from_data(embed))
+
+@bot.command()
+async def embed_file(ctx, filename):
+  with open(filename, "r") as inputFile:
+    embed = json.load(inputFile)
+  if "author" not in embed:
+    embed["author"] = dict()
+    embed["author"]["name"] = ctx.message.author.display_name
+    embed["author"]["icon_url"] = ctx.message.author.avatar_url        
+  await ctx.message.delete()        
+  await ctx.send(embed = discord.Embed.from_data(embed))
+
 
 with open("Config.json") as configFile:
   config = json.load(configFile)

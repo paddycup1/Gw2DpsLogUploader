@@ -419,9 +419,9 @@ if argParser.embed:
     value = []
     if argParser.raidar:
       if raidheroesLinks[index]:
-        value.append("[Raider]({})".format(raidarlinks["Results"][index]))
+        value.append("[Raidar]({})".format(raidarlinks["Results"][index]))
       else:
-        value.append("~~Raider~~")
+        value.append("~~Raidar~~")
     if argParser.rh:
       value.append("[RaidHeroes]({})".format(raidheroesLinks[index]))
     if argParser.ei:
