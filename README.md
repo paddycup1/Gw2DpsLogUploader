@@ -32,6 +32,7 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
 * `-yesterday` : Select target time section from yesterday day 00:00:00 to 23:59:59.
 
 ### Miscellaneous
+* `-last` : Only upload the last log in selected boss, time section and result(if `-win` or `-fail` is used).
 * `-win` and `-fail`: Select encounter result to be upload, the tool will upload both if not selected. 
   * Note that these command will let the tool parse every log in selected boss and time section, **this will significantly increase the time cost**.
 * `-sort type` : Sort output result by given type, type can be `name`, `time` or `encounter`. The type `encounter` Will sort logs from wing 1 to wing 5, from 99cm to 100cm.
