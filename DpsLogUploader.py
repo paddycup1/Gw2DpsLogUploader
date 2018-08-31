@@ -77,7 +77,7 @@ class ArgParser:
           if match:
             self.endTime = self.endTime.replace(hour=int(match.group(1)), minute=int(match.group(2)), second=0)
           index += 1
-      elif args[index] == "-past":
+      elif args[index] == "-past" or args[index] == "-p":
         index += 1
         self.endTime = datetime.datetime.now()
         while index < len(args) and not args[index].startswith("-"):
@@ -105,7 +105,7 @@ class ArgParser:
           print("Invalid sort type!!")
           sys.exit(0)
         index += 2
-      elif args[index] == "-reverse":
+      elif args[index] == "-reverse" or args[index] == "-r":
         self.sortReverse = True
         index += 1
       elif args[index] == "-o":
@@ -116,9 +116,10 @@ class ArgParser:
         self.title = args[index + 1]
         if index + 2 < len(args) and not args[index + 2].startswith("-"):
           self.description = args[index + 2]
+          index += 3
         else:
           self.description = ""
-        index += 3
+          index += 2
       elif args[index] == "-gen":
         index += 1
         self.rh = False
@@ -185,11 +186,11 @@ class ArgParser:
 
     if self.sort:
       if self.sort == 1:
-        ret.sort(key=lambda path:os.path.getmtime(path))
+        ret.sort(key=lambda path:os.path.getmtime(path), reverse=self.sortReverse)
       elif self.sort == 2:
-        ret.sort()
+        ret.sort(reverse=self.sortReverse)
       elif self.sort == 3:
-        ret.sort(key=getBossOrder)
+        ret.sort(key=getBossOrder, reverse=self.sortReverse)
     return ret
 
 
@@ -307,6 +308,7 @@ def syncFindAllRaidarLog(files, token, bossList, limit=100):
       if os.path.basename(file) == encounter["filename"]:
         ret["Results"].append("https://www.gw2raidar.com/encounter/" + encounter["url_id"])
         found = True
+        break
     if not found:
       ret["Results"].append(None)
       ret["LostCount"] += 1
@@ -418,7 +420,7 @@ if argParser.embed:
     d["name"] = pathComponent[len(pathComponent) - 2]
     value = []
     if argParser.raidar:
-      if raidheroesLinks[index]:
+      if raidarlinks["Results"][index]:
         value.append("[Raidar]({})".format(raidarlinks["Results"][index]))
       else:
         value.append("~~Raidar~~")

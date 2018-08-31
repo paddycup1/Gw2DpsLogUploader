@@ -27,7 +27,7 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
 ### Select time section
 * `-starttime yy/mm/dd [h:m[:s]]` (`-start`) : Select start point of target time section.
 * `-endtime yy/mm/dd [h:m[:s]]` (`-end`) : Select end point of target time section.
-* `-past 5h` or `-past 8d` : Select target time section from now back to given duration.
+* `-past 5h` or `-past 8d` (`-p`) : Select target time section from now back to given duration.
 * `-today` : Select target time section from current day 00:00:00 to 23:59:59.
 * `-yesterday` : Select target time section from yesterday day 00:00:00 to 23:59:59.
 
@@ -35,7 +35,7 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
 * `-win` and `-fail`: Select encounter result to be upload, the tool will upload both if not selected. 
   * Note that these command will let the tool parse every log in selected boss and time section, **this will significantly increase the time cost**.
 * `-sort type` : Sort output result by given type, type can be `name`, `time` or `encounter`. The type `encounter` Will sort logs from wing 1 to wing 5, from 99cm to 100cm.
-* `-reverse` : Reverse the sort result if `-sort` arguments is given.
+* `-reverse` (`-r`) : Reverse the sort result if `-sort` arguments is given.
 * `-gen [rh] [ei] [raidar]` : Select upload target, default is all select.
   * `rh` is Raid Heroes host by dps.report
   * `ei` is Elite Insight host by dps.report
