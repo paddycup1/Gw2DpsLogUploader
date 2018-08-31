@@ -43,7 +43,7 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
 * `-o filename` : Output result to given name. Default is `output.json` if not given.
 * `-raidarlogin username password` : Retrieve account token from Gw2Raidar API. This is needed for upload to Gw2Raidar.
 * `-init username password` : Generate default config file and retrieve Gw2Raidar account token by given username and password.
-* `-embed title [description]` : Generate discord embed format, you can use `EmbedHelper.py` in this repository to print embed to your discord server.
+* `-embed title [description]` : Generate discord embed format, you can use `EmbedHelper.py` in this repository to print embed to your discord server.  
 ![](https://i.imgur.com/8I4NB5D.png)
 
 ## Example
