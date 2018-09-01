@@ -51,8 +51,8 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
 
 ## Example
 
-#### Upload today's fotm log and sort by encounter level
-`python DpsLogUploader.py -b fotms -past 1d -win -sort encounter`
+#### Upload today's fotm log
+`python DpsLogUploader.py -b fotms -past 1d -win`
 
 #### Upload all success raid log in August and sort result with fight time
 `python DpsLogUploader.py -b raids -start 2018/8/1 -end 2018/8/31 -win -sort time`
