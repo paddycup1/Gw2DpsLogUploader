@@ -200,48 +200,45 @@ class EvtcLog:
         if not filename:
           raise BaseException("can't find evtc file in zip file.")
         with zipFile.open(filename) as evtcFile:
-          self.fileContent = evtcFile.read()
+          self.parseEvtc(evtcFile, headeronly)
     else:
       with open(filepath, "rb") as evtcFile:
-        self.fileContent = evtcFile.read()
-    if self.fileContent[0:4].decode("ascii") != "EVTC":
+        self.parseEvtc(evtcFile, headeronly)
+  
+  def parseEvtc(self, evtc, headeronly):
+    if evtc.read(4).decode("ascii") != "EVTC":
       raise BaseException("Input file isn't evtc file or standard zip.")
-    self.dateText = self.fileContent[4:12].decode("ascii")
-    self.revision = int(self.fileContent[12])
-    self.bossId = int.from_bytes(self.fileContent[13:15], byteorder="little", signed=False)
+    self.dateText = evtc.read(8).decode("ascii")
+    self.revision = evtc.read(1)
+    self.bossId = int.from_bytes(evtc.read(2), byteorder="little", signed=False)
     if not headeronly:
+      evtc.seek(16)
       self.cbtWin = False
 
-      self.agentCount = int.from_bytes(self.fileContent[16:20], byteorder="little", signed=False)
+      self.agentCount = int.from_bytes(evtc.read(4), byteorder="little", signed=False)
       self.agents = []
-      count = 0
-      i = 20
       playersAddr = []
-      while count < self.agentCount:
-        count += 1
-        agent = Agent(self.fileContent[i:i + Agent.LEN])
+      for i in range(0, self.agentCount):
+        agent = Agent(evtc.read(Agent.LEN))
         self.agents.append(agent)
         if agent.isPlayer:
           playersAddr.append(agent.addr)
-        i += Agent.LEN
 
-      self.skillCount = int.from_bytes(self.fileContent[i:i + 4], byteorder="little", signed=False)
-      i += 4
-      count = 0
+      self.skillCount = int.from_bytes(evtc.read(4), byteorder="little", signed=False)
       self.skills = []
-      while count < self.skillCount:
-        count += 1
-        self.skills.append(Skill(self.fileContent[i:i + Skill.LEN]))
-        i += Skill.LEN
+      for i in range(0, self.skillCount):
+        self.skills.append(Skill(evtc.read(Skill.LEN)))
       self.combatEvents = []
       if self.revision == 0:
-        while i < len(self.fileContent) and i + CombatEvent0.LEN < len(self.fileContent):
-          self.combatEvents.append(CombatEvent0(self.fileContent[i:i + CombatEvent0.LEN]))
-          i += CombatEvent0.LEN
+        data = evtc.read(CombatEvent0.LEN)
+        while len(data) == CombatEvent0.LEN:
+          self.combatEvents.append(CombatEvent0(data))
+          data = evtc.read(CombatEvent0.LEN)
       else:
-        while i < len(self.fileContent) and i + CombatEvent1.LEN < len(self.fileContent):
-          self.combatEvents.append(CombatEvent1(self.fileContent[i:i + CombatEvent1.LEN]))
-          i += CombatEvent1.LEN
+        data = evtc.read(CombatEvent1.LEN)
+        while len(data) == CombatEvent1.LEN:
+          self.combatEvents.append(CombatEvent1(data))
+          data = evtc.read(CombatEvent1.LEN)
       for event in self.combatEvents:
         if event.is_statechange == CbtStateChange.CBTS_CHANGEDEAD:
           for addr in playersAddr:
@@ -250,3 +247,5 @@ class EvtcLog:
               break
       if len(playersAddr) != 0:
         self.cbtWin = True
+      self.combatTimeUsed = self.combatEvents[-1].time - self.combatEvents[0].time
+

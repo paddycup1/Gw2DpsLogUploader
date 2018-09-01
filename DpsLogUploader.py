@@ -29,7 +29,7 @@ class ArgParser:
     self.bosses = []
     self.startTime = datetime.datetime.now()
     self.endTime = datetime.datetime.fromtimestamp(self.startTime.timestamp() - ArgParser.SECONDS_IN_DAY)
-    self.last = True
+    self.last = False
     self.allTime = False
     self.win = ArgParser.RESULT_ALL
     self.sort = ArgParser.SORT_NONE
@@ -39,6 +39,7 @@ class ArgParser:
     self.rh = True
     self.ei = True
     self.raidar = True
+    self.longest = False
 
     for index in range(0, len(args)):
       args[index] = args[index].lower()
@@ -151,6 +152,9 @@ class ArgParser:
           sys.exit(0)
       elif args[index] == "-json":
         self.format = ArgParser.FORMAT_JSON
+      elif args[index] == "-longest":
+        index += 1
+        self.longest = True
       else:
         index += 1
     if len(self.bosses) == 0:
@@ -161,40 +165,59 @@ class ArgParser:
     start = self.startTime.timestamp()
     end   = self.endTime.timestamp()
     for boss in self.bosses:
+
       if not os.path.exists(os.path.join(root, boss)):
         continue
       dirpath = os.path.join(root, boss)
       fileList = []
+      if self.longest:
+        combatTimeUsed = []
       for f in os.listdir(dirpath):
         if re.match(".+\\.evtc(\\.zip)?", f):
           filepath = os.path.join(dirpath, f)
           timestamp = os.path.getmtime(filepath)
           if (timestamp >= start and timestamp <= end) or self.allTime:
-            if self.win == ArgParser.RESULT_ALL:
+            if self.win == ArgParser.RESULT_ALL and self.longest == False:
               fileList.append(filepath)
             else:
               print("Parsing {} log {}...".format(boss, f))
               evtc = EvtcParser.EvtcLog(filepath)
               if self.win == ArgParser.RESULT_WIN and evtc.cbtWin:
                 fileList.append(filepath)
+                if self.longest:
+                  combatTimeUsed.append(evtc.combatTimeUsed)
               elif self.win == ArgParser.RESULT_FAIL and not evtc.cbtWin:
                 fileList.append(filepath)
+                if self.longest:
+                  combatTimeUsed.append(evtc.combatTimeUsed)
+              elif self.win == ArgParser.RESULT_ALL:
+                fileList.append(filepath)
+                if self.longest:
+                  combatTimeUsed.append(evtc.combatTimeUsed)
       if len(fileList) == 0:
         continue
+
       if self.last:
         maxtime = 0
+        lastlog = None
         for log in fileList:
           if os.path.getmtime(log) > maxtime:
             maxtime = os.path.getmtime(log)
-          lastlog = log
-        timestamp = os.path.getmtime(lastlog)
-        if timestamp >= start and timestamp <= end:
-          ret.append(lastlog)
+            lastlog = log
+        ret.append(lastlog)
         continue
-      if self.allTime:
+      elif self.longest:
+        maxtime = 0
+        maxlog = None
+        for i in range(0, len(fileList)):
+          if combatTimeUsed[i] > maxtime:
+            maxtime = combatTimeUsed[i]
+            maxlog = fileList[i]
+        ret.append(maxlog)
+      else:
         for log in fileList:
-          ret.append(os.path.join(dirpath, log))
-        continue
+          ret.append(log)
+
 
     if self.win != 0:
       print("\n", end="")
