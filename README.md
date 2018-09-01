@@ -36,14 +36,14 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
 * `-longest` : Only upload the longest log in each boss selected, time section and result(if `-win` or `-fail` is used), can't be used with `-last`.
 * `-win` and `-fail`: Select encounter result to be upload, the tool will upload both if not selected. 
   * Note that command `-longest`, `-win` and `-fail` will let the tool parse every log in selected boss and time section, **this will significantly increase the time cost**.
-* `-sort type` : Sort output result by given type, type can be `name`, `time` or `encounter`. The type `encounter` Will sort logs from wing 1 to wing 5, from 99cm to 100cm.
+* `-sort type` : Sort output result by given type, type can be `name`, `time` or `encounter`. The type `encounter` will sort logs from wing 1 to wing 5, from 99cm to 100cm (by the order in `BossList.json`).
 * `-reverse` (`-r`) : Reverse the sort result if `-sort` arguments is given.
 * `-gen [rh] [ei] [raidar]` : Select upload target, default is all select.
   * `rh` is Raid Heroes host by dps.report
   * `ei` is Elite Insight host by dps.report
   * `raidar` or can be `rd` for short, is Gw2Raidar
-* `-o filename` : Output result to given name. Default is `output/output.txt` if not given.
-* `-raidarlogin username password` : Retrieve account token from Gw2Raidar API. This is needed for upload to Gw2Raidar.
+* `-o filename` : Output result to given file name. Default is `output/output.txt` if not given.
+* `-raidarlogin username password` : Retrieve account token from Gw2Raidar API. The token is needed for upload to Gw2Raidar.
 * `-init username password` : Generate default config file and retrieve Gw2Raidar account token by given username and password.
 * `-json` : Gererate json format output.
 * `-embed title [description]` : Generate discord embed format output, you can use `EmbedHelper.py` in this repository to print embed to your discord server.  
