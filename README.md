@@ -41,10 +41,11 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
   * `rh` is Raid Heroes host by dps.report
   * `ei` is Elite Insight host by dps.report
   * `raidar` or can be `rd` for short, is Gw2Raidar
-* `-o filename` : Output result to given name. Default is `output.json` if not given.
+* `-o filename` : Output result to given name. Default is `output/output.txt` if not given.
 * `-raidarlogin username password` : Retrieve account token from Gw2Raidar API. This is needed for upload to Gw2Raidar.
 * `-init username password` : Generate default config file and retrieve Gw2Raidar account token by given username and password.
-* `-embed title [description]` : Generate discord embed format, you can use `EmbedHelper.py` in this repository to print embed to your discord server.  
+* `-json` : Gererate json format output.
+* `-embed title [description]` : Generate discord embed format output, you can use `EmbedHelper.py` in this repository to print embed to your discord server.  
 ![](https://i.imgur.com/8I4NB5D.png)
 
 ## Example

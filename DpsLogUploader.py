@@ -12,17 +12,30 @@ import EvtcParser
 class ArgParser:
   SECONDS_IN_HOUR = 60 * 60
   SECONDS_IN_DAY  = 24 * 60 * 60
+
+  FORMAT_PLAIN = 0
+  FORMAT_EMBED = 1
+  FORMAT_JSON  = 2
+
+  SORT_NONE      = 0
+  SORT_TIME      = 1
+  SORT_BOSS_NAME = 2
+  SORT_ENCOUNTER = 3
+
+  RESULT_WIN  = 1
+  RESULT_ALL  = 0
+  RESULT_FAIL = -1
   def __init__(self, args, bossList):
     self.bosses = []
     self.startTime = datetime.datetime.now()
     self.endTime = datetime.datetime.fromtimestamp(self.startTime.timestamp() - ArgParser.SECONDS_IN_DAY)
     self.last = True
     self.allTime = False
-    self.win = 0
-    self.sort = 0
+    self.win = ArgParser.RESULT_ALL
+    self.sort = ArgParser.SORT_NONE
     self.sortReverse = False
-    self.embed = False
-    self.outputPath = "output.json"
+    self.format = ArgParser.FORMAT_PLAIN
+    self.outputPath = "output/output.txt"
     self.rh = True
     self.ei = True
     self.raidar = True
@@ -42,7 +55,7 @@ class ArgParser:
         self.endTime = datetime.datetime.now().replace(hour=23, minute=59, second=59)
         index += 1
       elif args[index] == "-yesterday":
-        self.startTime = datetime.datetime.fromtimestamp(datetime.datetime.now().timestamp - ArgParser.SECONDS_IN_DAY).replace(hour=0, minute=0, second=0)
+        self.startTime = datetime.datetime.fromtimestamp(datetime.datetime.now().timestamp() - ArgParser.SECONDS_IN_DAY).replace(hour=0, minute=0, second=0)
         self.endTime = self.startTime.replace(hour=23, minute=59, second=59)
         index += 1
       elif args[index] == "-last":
@@ -89,18 +102,18 @@ class ArgParser:
             self.startTime = datetime.datetime.fromtimestamp(self.endTime.timestamp() - ArgParser.SECONDS_IN_HOUR * int(match.group(1)))
           index += 1
       elif args[index] == "-win":
-        self.win = 1
+        self.win = ArgParser.RESULT_WIN
         index += 1
       elif args[index] == "-fail":
-        self.win = -1
+        self.win = ArgParser.RESULT_FAIL
         index += 1
       elif args[index] == "-sort":
         if args[index + 1] == "time":
-          self.sort = 1
+          self.sort = ArgParser.SORT_TIME
         elif args[index + 1] == "name":
-          self.sort = 2
+          self.sort = ArgParser.SORT_BOSS_NAME
         elif args[index + 1] == "encounter":
-          self.sort = 3
+          self.sort = ArgParser.SORT_ENCOUNTER
         else:
           print("Invalid sort type!!")
           sys.exit(0)
@@ -112,7 +125,7 @@ class ArgParser:
         self.outputPath = args[index + 1]
         index += 2
       elif args[index] == "-embed":
-        self.embed = True
+        self.format = ArgParser.FORMAT_EMBED
         self.title = args[index + 1]
         if index + 2 < len(args) and not args[index + 2].startswith("-"):
           self.description = args[index + 2]
@@ -136,6 +149,8 @@ class ArgParser:
         if not (self.rh or self.ei or self.raidar):
           print("No generator selected!!")
           sys.exit(0)
+      elif args[index] == "-json":
+        self.format = ArgParser.FORMAT_JSON
       else:
         index += 1
     if len(self.bosses) == 0:
@@ -155,14 +170,14 @@ class ArgParser:
           filepath = os.path.join(dirpath, f)
           timestamp = os.path.getmtime(filepath)
           if (timestamp >= start and timestamp <= end) or self.allTime:
-            if self.win == 0:
+            if self.win == ArgParser.RESULT_ALL:
               fileList.append(filepath)
             else:
               print("Parsing {} log {}...".format(boss, f))
               evtc = EvtcParser.EvtcLog(filepath)
-              if self.win == 1 and evtc.cbtWin:
+              if self.win == ArgParser.RESULT_WIN and evtc.cbtWin:
                 fileList.append(filepath)
-              elif self.win == -1 and not evtc.cbtWin:
+              elif self.win == ArgParser.RESULT_FAIL and not evtc.cbtWin:
                 fileList.append(filepath)
       if len(fileList) == 0:
         continue
@@ -185,11 +200,11 @@ class ArgParser:
       print("\n", end="")
 
     if self.sort:
-      if self.sort == 1:
+      if self.sort == ArgParser.SORT_TIME:
         ret.sort(key=lambda path:os.path.getmtime(path), reverse=self.sortReverse)
-      elif self.sort == 2:
+      elif self.sort == ArgParser.SORT_BOSS_NAME:
         ret.sort(reverse=self.sortReverse)
-      elif self.sort == 3:
+      elif self.sort == ArgParser.SORT_ENCOUNTER:
         ret.sort(key=getBossOrder, reverse=self.sortReverse)
     return ret
 
@@ -407,7 +422,7 @@ if argParser.raidar:
   loop.run_until_complete(fu)
   raidarlinks = fu.result()
 
-if argParser.embed:
+if argParser.format == ArgParser.FORMAT_EMBED:
   output = OrderedDict()
   output["title"] = argParser.title
   output["description"] = argParser.description
@@ -434,7 +449,7 @@ if argParser.embed:
       d["value"] += " | "
       d["value"] += value[i]
     output["fields"].append(d)
-else:
+elif argParser.format == ArgParser.FORMAT_JSON:
   output = OrderedDict()
   output["Result"] = []
   for index in range(0, len(uploadFiles)):
@@ -449,6 +464,22 @@ else:
     if argParser.raidar:
       d["Raidar"] = raidarlinks["Results"][index]
     output["Result"].append(d)
+elif argParser.format == ArgParser.FORMAT_PLAIN:
+  if len(os.path.dirname(argParser.outputPath)) > 0 and not os.path.exists(os.path.dirname(argParser.outputPath)):
+    os.makedirs(os.path.dirname(argParser.outputPath))
+  with open(argParser.outputPath, "w") as outfile:
+    for index in range(0, len(uploadFiles)):
+      pathComponent = uploadFiles[index].split(os.path.sep)
+      print("{}: {}".format(pathComponent[len(pathComponent) - 2], pathComponent[len(pathComponent) - 1]), file=outfile)
+      if argParser.rh:
+        print("  Raid Heroes: ", raidheroesLinks[index], file=outfile)
+      if argParser.ei:
+        print("  EliteInsight:", eliteinsightLinks[index], file=outfile)
+      if argParser.raidar and raidarlinks["Results"][index]:
+        print("  Gw2Raidar:   ", raidarlinks["Results"][index], file=outfile)
+  print("All complete.")
+  sys.exit(0)
+ 
 
 try:
   if len(os.path.dirname(argParser.outputPath)) > 0 and not os.path.exists(os.path.dirname(argParser.outputPath)):
