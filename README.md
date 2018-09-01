@@ -32,8 +32,8 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
 * `-yesterday` : Select target time section from yesterday day 00:00:00 to 23:59:59.
 
 ### Miscellaneous
-* `-last` : Only upload the last log in selected boss, time section and result(if `-win` or `-fail` is used), can't be used with `-longest`.
-* `-longest` : Only upload the longest log in selected boss, time section and result(if `-win` or `-fail` is used), can't be used with `-last`.
+* `-last` : Only upload the last log in each boss selected, time section and result(if `-win` or `-fail` is used), can't be used with `-longest`.
+* `-longest` : Only upload the longest log in each boss selected, time section and result(if `-win` or `-fail` is used), can't be used with `-last`.
 * `-win` and `-fail`: Select encounter result to be upload, the tool will upload both if not selected. 
   * Note that command `-longest`, `-win` and `-fail` will let the tool parse every log in selected boss and time section, **this will significantly increase the time cost**.
 * `-sort type` : Sort output result by given type, type can be `name`, `time` or `encounter`. The type `encounter` Will sort logs from wing 1 to wing 5, from 99cm to 100cm.
@@ -61,8 +61,7 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
 `python DpsLogUploader.py -b W4 -alltime -gen rd rh`
 
 ## Explation of BossList.json
-You can customer boss alias by edit this file,
-
+You can customer boss alias by edit this file:
 ```json
 {
   "Bosses": [
@@ -79,7 +78,7 @@ You can customer boss alias by edit this file,
     {
       "Name": "Any name you want, this name is used to refer group in -boss arguments",
       "Bosses": [
-        "Name filed of boss you want to add into this group. Can't use alias here"
+        "Name filed of boss you want to add into this group. Don't use alias here"
       ]
     }
   ]
