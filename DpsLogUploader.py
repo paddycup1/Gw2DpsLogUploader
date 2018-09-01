@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import requests  #pip3 install requests2
 import json
 import os
@@ -5,7 +6,6 @@ import threading
 import asyncio
 import sys
 import datetime
-from collections import OrderedDict
 import re
 import EvtcParser
 
@@ -20,7 +20,6 @@ class ArgParser:
   SORT_NONE      = 0
   SORT_TIME      = 1
   SORT_BOSS_NAME = 2
-  SORT_ENCOUNTER = 3
 
   RESULT_WIN  = 1
   RESULT_ALL  = 0
@@ -113,8 +112,6 @@ class ArgParser:
           self.sort = ArgParser.SORT_TIME
         elif args[index + 1] == "name":
           self.sort = ArgParser.SORT_BOSS_NAME
-        elif args[index + 1] == "encounter":
-          self.sort = ArgParser.SORT_ENCOUNTER
         else:
           print("Invalid sort type!!")
           sys.exit(0)
@@ -227,8 +224,6 @@ class ArgParser:
         ret.sort(key=lambda path:os.path.getmtime(path), reverse=self.sortReverse)
       elif self.sort == ArgParser.SORT_BOSS_NAME:
         ret.sort(reverse=self.sortReverse)
-      elif self.sort == ArgParser.SORT_ENCOUNTER:
-        ret.sort(key=getBossOrder, reverse=self.sortReverse)
     return ret
 
 
@@ -457,15 +452,15 @@ if argParser.format == ArgParser.FORMAT_EMBED:
     d = OrderedDict()
     d["name"] = pathComponent[len(pathComponent) - 2]
     value = []
+    if argParser.rh:
+      value.append("[RaidHeroes]({})".format(raidheroesLinks[index]))
+    if argParser.ei:
+      value.append("[EliteInsight]({})".format(eliteinsightLinks[index]))
     if argParser.raidar:
       if raidarlinks["Results"][index]:
         value.append("[Raidar]({})".format(raidarlinks["Results"][index]))
       else:
         value.append("~~Raidar~~")
-    if argParser.rh:
-      value.append("[RaidHeroes]({})".format(raidheroesLinks[index]))
-    if argParser.ei:
-      value.append("[EliteInsight]({})".format(eliteinsightLinks[index]))
     
     d["value"] = value[0]
     for i in range(1, len(value)):
@@ -502,7 +497,6 @@ elif argParser.format == ArgParser.FORMAT_PLAIN:
         print("  Gw2Raidar:   ", raidarlinks["Results"][index], file=outfile)
   print("All complete.")
   sys.exit(0)
- 
 
 try:
   if len(os.path.dirname(argParser.outputPath)) > 0 and not os.path.exists(os.path.dirname(argParser.outputPath)):

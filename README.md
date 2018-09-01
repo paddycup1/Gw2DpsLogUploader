@@ -36,7 +36,7 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
 * `-longest` : Only upload the longest log in each boss selected, time section and result(if `-win` or `-fail` is used), can't be used with `-last`.
 * `-win` and `-fail`: Select encounter result to be upload, the tool will upload both if not selected. 
   * Note that command `-longest`, `-win` and `-fail` will let the tool parse every log in selected boss and time section, **this will significantly increase the time cost**.
-* `-sort type` : Sort output result by given type, type can be `name`, `time` or `encounter`. The type `encounter` will sort logs from wing 1 to wing 5, from 99cm to 100cm (by the order in `BossList.json`).
+* `-sort type` : Sort output result by given type, type can be `name` or `time`.
 * `-reverse` (`-r`) : Reverse the sort result if `-sort` arguments is given.
 * `-gen [rh] [ei] [raidar]` : Select upload target, default is all select.
   * `rh` is Raid Heroes host by dps.report

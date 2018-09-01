@@ -14,24 +14,30 @@ async def on_ready():
 
 @bot.command()
 async def embed(ctx):
-  embed = json.loads(ctx.message.content[7:])
-  if "author" not in embed:
-    embed["author"] = dict()
-    embed["author"]["name"] = ctx.message.author.display_name
-    embed["author"]["icon_url"] = ctx.message.author.avatar_url        
-  await ctx.message.delete()        
-  await ctx.send(embed = discord.Embed.from_data(embed))
+  try:
+    embed = json.loads(ctx.message.content[7:])
+    if "author" not in embed:
+      embed["author"] = dict()
+      embed["author"]["name"] = ctx.message.author.display_name
+      embed["author"]["icon_url"] = ctx.message.author.avatar_url        
+    await ctx.message.delete()        
+    await ctx.send(embed = discord.Embed.from_data(embed))
+  except BaseException as e:
+    await ctx.send(str(e))
 
 @bot.command()
 async def embed_file(ctx, filename):
-  with open(filename, "r") as inputFile:
-    embed = json.load(inputFile)
-  if "author" not in embed:
-    embed["author"] = dict()
-    embed["author"]["name"] = ctx.message.author.display_name
-    embed["author"]["icon_url"] = ctx.message.author.avatar_url        
-  await ctx.message.delete()        
-  await ctx.send(embed = discord.Embed.from_data(embed))
+  try:
+    with open(filename, "r") as inputFile:
+      embed = json.load(inputFile)
+    if "author" not in embed:
+      embed["author"] = dict()
+      embed["author"]["name"] = ctx.message.author.display_name
+      embed["author"]["icon_url"] = ctx.message.author.avatar_url        
+    await ctx.message.delete()        
+    await ctx.send(embed = discord.Embed.from_data(embed))
+  except BaseException as e:
+    await ctx.send(str(e))
 
 
 with open("Config.json") as configFile:
