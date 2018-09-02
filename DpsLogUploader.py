@@ -24,7 +24,7 @@ class ArgParser:
   RESULT_WIN  = 1
   RESULT_ALL  = 0
   RESULT_FAIL = -1
-  def __init__(self, args, bossList):
+  def __init__(self, inputArgs, bossList):
     self.bosses = []
     self.startTime = datetime.datetime.now()
     self.endTime = datetime.datetime.fromtimestamp(self.startTime.timestamp() - ArgParser.SECONDS_IN_DAY)
@@ -39,9 +39,9 @@ class ArgParser:
     self.ei = True
     self.raidar = True
     self.longest = False
-
-    for index in range(0, len(args)):
-      args[index] = args[index].lower()
+    args = []
+    for arg in inputArgs:
+      args.append(arg.lower())
 
     index = 0
     while index < len(args):
@@ -120,7 +120,7 @@ class ArgParser:
         self.sortReverse = True
         index += 1
       elif args[index] == "-o":
-        self.outputPath = args[index + 1]
+        self.outputPath = inputArgs[index + 1]
         index += 2
       elif args[index] == "-embed":
         self.format = ArgParser.FORMAT_EMBED
@@ -325,7 +325,7 @@ async def findAllRaidarLog(files, token, bossList, future, timegap=20, maxcount=
       future.set_result(ret)
     if maxcount == 0:
       future.set_result(ret)
-    print("Waiting Gw2Raidar... remaining {} times({}s), lost {}".format(maxcount, timegap, ret["LostCount"]))
+    print("Checking Gw2Raidar... remaining {} times({}s), lost {}".format(maxcount, timegap, ret["LostCount"]))
     await asyncio.sleep(timegap)
     maxcount -= 1
 
