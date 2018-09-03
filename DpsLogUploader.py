@@ -82,7 +82,7 @@ class ArgParser:
         while index < len(args) and not args[index].startswith("-"):
           match = re.match("(\\d+)/(\\d+)/(\\d+)", args[index])
           if match:
-            self.endTime = self.endTime.replace(year=int(match.group(1)), month=int(match.group(2)), day=int(match.group(3), hour=23, minute=59, second=59))
+            self.endTime = self.startTime.replace(year=int(match.group(1)), month=int(match.group(2)), day=int(match.group(3)), hour=23, minute=59, second=59)
           match = re.match("(\\d+):(\\d+):(\\d+)", args[index])
           if match:
             self.endTime = self.endTime.replace(hour=int(match.group(1)), minute=int(match.group(2)), second=int(match.group(3)))
