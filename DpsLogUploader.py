@@ -1,9 +1,9 @@
 from collections import OrderedDict
+from time import sleep
 import requests  #pip3 install requests2
 import json
 import os
 import threading
-import asyncio
 import sys
 import datetime
 import re
@@ -20,6 +20,7 @@ class ArgParser:
   SORT_NONE      = 0
   SORT_TIME      = 1
   SORT_BOSS_NAME = 2
+  SORT_ENCOUNTER = 3
 
   RESULT_WIN  = 1
   RESULT_ALL  = 0
@@ -48,11 +49,15 @@ class ArgParser:
       if args[index] == "-b" or args[index] == "-boss":
         index += 1
         while index < len(args) and not args[index].startswith("-"):
-          self.bosses.extend(searchBossName(bossList, args[index]))
+          newBoss = searchBossName(bossList, args[index])
+          for boss in newBoss:
+            if boss not in self.bosses:
+              self.bosses.append(boss)
           index += 1
       elif args[index] == "-today":
         self.startTime = datetime.datetime.now().replace(hour=0, minute=0, second=0)
         self.endTime = datetime.datetime.now().replace(hour=23, minute=59, second=59)
+        datetime.datetime()
         index += 1
       elif args[index] == "-yesterday":
         self.startTime = datetime.datetime.fromtimestamp(datetime.datetime.now().timestamp() - ArgParser.SECONDS_IN_DAY).replace(hour=0, minute=0, second=0)
@@ -69,7 +74,10 @@ class ArgParser:
         while index < len(args) and not args[index].startswith("-"):
           match = re.match("(\\d+)/(\\d+)/(\\d+)", args[index])
           if match:
-            self.startTime = self.startTime.replace(year=int(match.group(1)), month=int(match.group(2)), day=int(match.group(3)), hour=0, minute=0, second=0)
+            self.startTime = datetime.datetime(year=int(match.group(1)), month=int(match.group(2)), day=int(match.group(3)), hour=0, minute=0, second=0)
+          match = re.match("(\\d+)/(\\d+)", args[index])
+          if match:
+            self.startTime = datetime.datetime.now().replace(month=int(match.group(1)), day=int(match.group(2)), hour=0, minute=0, second=0)
           match = re.match("(\\d+):(\\d+):(\\d+)", args[index])
           if match:
             self.startTime = self.startTime.replace(hour=int(match.group(1)), minute=int(match.group(2)), second=int(match.group(3)))
@@ -82,7 +90,10 @@ class ArgParser:
         while index < len(args) and not args[index].startswith("-"):
           match = re.match("(\\d+)/(\\d+)/(\\d+)", args[index])
           if match:
-            self.endTime = self.startTime.replace(year=int(match.group(1)), month=int(match.group(2)), day=int(match.group(3)), hour=23, minute=59, second=59)
+            self.endTime = datetime.datetime(year=int(match.group(1)), month=int(match.group(2)), day=int(match.group(3)), hour=23, minute=59, second=59)
+          match = re.match("(\\d+)/(\\d+)", args[index])
+          if match:
+            self.endTime = datetime.datetime.now().replace(month=int(match.group(1)), day=int(match.group(2)), hour=23, minute=59, second=59)
           match = re.match("(\\d+):(\\d+):(\\d+)", args[index])
           if match:
             self.endTime = self.endTime.replace(hour=int(match.group(1)), minute=int(match.group(2)), second=int(match.group(3)))
@@ -112,6 +123,8 @@ class ArgParser:
           self.sort = ArgParser.SORT_TIME
         elif args[index + 1] == "name":
           self.sort = ArgParser.SORT_BOSS_NAME
+        elif args[index + 1] == "encounter":
+          self.sort = ArgParser.SORT_ENCOUNTER
         else:
           print("Invalid sort type!!")
           sys.exit(0)
@@ -224,6 +237,8 @@ class ArgParser:
         ret.sort(key=lambda path:os.path.getmtime(path), reverse=self.sortReverse)
       elif self.sort == ArgParser.SORT_BOSS_NAME:
         ret.sort(reverse=self.sortReverse)
+      elif self.sort == ArgParser.SORT_ENCOUNTER:
+        ret.sort(key=getBossOrder, reverse=self.sortReverse)
     return ret
 
 
@@ -318,15 +333,15 @@ def findGw2RaidarLog(path, token, limit=100):
       return "https://www.gw2raidar.com/encounter/" + encounter["url_id"]
   return None
 
-async def findAllRaidarLog(files, token, bossList, future, timegap=20, maxcount=15, limit=100):
+def findAllRaidarLog(files, token, bossList, timegap=20, maxcount=15, limit=100):
   while True:
     ret = syncFindAllRaidarLog(files, token, bossList, limit=limit)
     if ret["LostCount"] == 0:
-      future.set_result(ret)
+      return ret
     if maxcount == 0:
-      future.set_result(ret)
+      return ret
     print("Checking Gw2Raidar... remaining {} times({}s), lost {}".format(maxcount, timegap, ret["LostCount"]))
-    await asyncio.sleep(timegap)
+    sleep(timegap)
     maxcount -= 1
 
 def syncFindAllRaidarLog(files, token, bossList, limit=100):
@@ -434,17 +449,13 @@ for log in uploadFiles:
     eliteinsightLinks.append(uploadDpsReport(log, gen="ei"))
   
 if argParser.raidar:
-  loop = asyncio.get_event_loop()
-  fu = asyncio.Future()
-  asyncio.ensure_future(findAllRaidarLog(uploadFiles, config["Gw2RaidarToken"], bossList, fu))
-  loop.run_until_complete(fu)
-  raidarlinks = fu.result()
+  raidarlinks = findAllRaidarLog(uploadFiles, config["Gw2RaidarToken"], bossList)
 
 if argParser.format == ArgParser.FORMAT_EMBED:
   output = OrderedDict()
   output["title"] = argParser.title
   output["description"] = argParser.description
-  output["color"] = 31743
+  output["color"] = 0xD02906
   output["thumbnail"] = dict([("url", "https://render.guildwars2.com/file/5866630DA52DCB5C423FB81ECF69FD071611E36B/1128644.png")])
   output["fields"] = []
   for index in range(0, len(uploadFiles)):
