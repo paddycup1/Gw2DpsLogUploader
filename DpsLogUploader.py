@@ -255,16 +255,17 @@ def searchBossName(bossList, name):
     for boss in bossList["Bosses"]:
       ret.append(boss["Name"])
     return ret
+
+  for group in bossList["Groups"]:
+    if group["Name"].lower() == name:
+      return group["Bosses"]
+
   for boss in bossList["Bosses"]:
     if boss["Name"].lower() == name:
       return [boss["Name"]]
     for alias in boss["Aliases"]:
       if alias.lower() == name:
-        return [boss["Name"]]
-  
-  for group in bossList["Groups"]:
-    if group["Name"].lower() == name:
-      return group["Bosses"]
+        return [boss["Name"]]  
   return None
 
 def uploadDpsReport(path, gen="rh"):
