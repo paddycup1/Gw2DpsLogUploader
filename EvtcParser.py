@@ -1,5 +1,6 @@
 import zipfile
 import sys
+import os
 
 class Iff:
   IFF_FRIEND   = 0
@@ -190,7 +191,7 @@ class CombatEvent1:
 
 
 class EvtcLog:
-  def __init__(self, filepath, headeronly=False):
+  def __init__(self, filepath, quickParse=False):
     if zipfile.is_zipfile(filepath):
       with zipfile.ZipFile(filepath) as zipFile:
         namelist = zipFile.namelist()
@@ -200,34 +201,36 @@ class EvtcLog:
         if not filename:
           raise BaseException("can't find evtc file in zip file.")
         with zipFile.open(filename) as evtcFile:
-          self.parseEvtc(evtcFile, headeronly)
+          self.parseEvtc(evtcFile, zipFile.infolist()[0].file_size, quickParse)
     else:
       with open(filepath, "rb") as evtcFile:
-        self.parseEvtc(evtcFile, headeronly)
+        self.parseEvtc(evtcFile, os.path.getsize(filepath), quickParse)
   
-  def parseEvtc(self, evtc, headeronly):
+  def parseEvtc(self, evtc, size, quickParse):
     if evtc.read(4).decode("ascii") != "EVTC":
       raise BaseException("Input file isn't evtc file or standard zip.")
     self.dateText = evtc.read(8).decode("ascii")
     self.revision = evtc.read(1)
     self.bossId = int.from_bytes(evtc.read(2), byteorder="little", signed=False)
-    if not headeronly:
-      evtc.seek(16)
-      self.cbtWin = False
+    evtc.seek(16)
+    self.cbtResult = False
+    self.playerNames = []
+    self.agentCount = int.from_bytes(evtc.read(4), byteorder="little", signed=False)
+    self.agents = []
+    playersAddr = []
+    for i in range(0, self.agentCount):
+      agent = Agent(evtc.read(Agent.LEN))
+      self.agents.append(agent)
+      if agent.isPlayer:
+        playersAddr.append(agent.addr)
+        self.playerNames.append(agent.displayName)
+        self.playerNames.append(agent.name)
 
-      self.agentCount = int.from_bytes(evtc.read(4), byteorder="little", signed=False)
-      self.agents = []
-      playersAddr = []
-      for i in range(0, self.agentCount):
-        agent = Agent(evtc.read(Agent.LEN))
-        self.agents.append(agent)
-        if agent.isPlayer:
-          playersAddr.append(agent.addr)
-
-      self.skillCount = int.from_bytes(evtc.read(4), byteorder="little", signed=False)
-      self.skills = []
-      for i in range(0, self.skillCount):
-        self.skills.append(Skill(evtc.read(Skill.LEN)))
+    self.skillCount = int.from_bytes(evtc.read(4), byteorder="little", signed=False)
+    self.skills = []
+    for i in range(0, self.skillCount):
+      self.skills.append(Skill(evtc.read(Skill.LEN)))
+    if not quickParse:
       self.combatEvents = []
       if self.revision == 0:
         data = evtc.read(CombatEvent0.LEN)
@@ -246,6 +249,23 @@ class EvtcLog:
               playersAddr.remove(addr)
               break
       if len(playersAddr) != 0:
-        self.cbtWin = True
+        self.cbtResult = True
       self.combatTimeUsed = self.combatEvents[-1].time - self.combatEvents[0].time
+    else:
+      if self.revision == 0:
+        data = evtc.read(CombatEvent0.LEN)
+        firstLog = CombatEvent0(data)
+        evtc.seek(size - CombatEvent0.LEN)
+        data = evtc.read(CombatEvent0.LEN)
+        lastLog = CombatEvent0(data)
+      else:
+        data = evtc.read(CombatEvent1.LEN)
+        firstLog = CombatEvent1(data)
+        evtc.seek(size - CombatEvent1.LEN)
+        data = evtc.read(CombatEvent1.LEN)
+        lastLog = CombatEvent1(data)
+      self.combatTimeUsed = lastLog.time - firstLog.time
+
+
+
 

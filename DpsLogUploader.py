@@ -27,8 +27,8 @@ class ArgParser:
   RESULT_FAIL = -1
   def __init__(self, inputArgs, bossList):
     self.bosses = []
-    self.startTime = datetime.datetime.now()
-    self.endTime = datetime.datetime.fromtimestamp(self.startTime.timestamp() - ArgParser.SECONDS_IN_DAY)
+    self.endTime = datetime.datetime.now()
+    self.startTime = datetime.datetime.fromtimestamp(self.endTime.timestamp() - ArgParser.SECONDS_IN_DAY)
     self.last = False
     self.allTime = False
     self.win = ArgParser.RESULT_ALL
@@ -40,6 +40,9 @@ class ArgParser:
     self.ei = True
     self.raidar = True
     self.longest = False
+    self.longerthan = None
+    self.withNames = []
+
     args = []
     for arg in inputArgs:
       args.append(arg.lower())
@@ -62,6 +65,14 @@ class ArgParser:
       elif args[index] == "-yesterday":
         self.startTime = datetime.datetime.fromtimestamp(datetime.datetime.now().timestamp() - ArgParser.SECONDS_IN_DAY).replace(hour=0, minute=0, second=0)
         self.endTime = self.startTime.replace(hour=23, minute=59, second=59)
+        index += 1
+      elif args[index] == "-week":
+        self.startTime = datetime.datetime.fromtimestamp(datetime.datetime.now().timestamp() - ArgParser.SECONDS_IN_DAY * datetime.datetime.now().weekday()).replace(hour=0, minute=0, second=0)
+        self.endTime = datetime.datetime.fromtimestamp(self.startTime.timestamp() + ArgParser.SECONDS_IN_DAY * 6).replace(hour=23, minute=59, second=59)
+        index += 1
+      elif args[index] == "-raidreset":
+        self.startTime = datetime.datetime.utcfromtimestamp(datetime.datetime.utcnow().timestamp() - ArgParser.SECONDS_IN_DAY * datetime.datetime.utcnow().weekday()).replace(hour=7, minute=30, second=0)
+        self.endTime = datetime.datetime.utcfromtimestamp(self.startTime.timestamp() + ArgParser.SECONDS_IN_DAY * 7).replace(hour=7, minute=29, second=59)
         index += 1
       elif args[index] == "-last":
         self.last = True
@@ -165,6 +176,34 @@ class ArgParser:
       elif args[index] == "-longest":
         index += 1
         self.longest = True
+      elif args[index] == "-longerthan":
+        match = re.match("(\\d+)m(\\d+)s", args[index + 1])
+        if match:
+          self.longerthan = int(match.group(1)) * 60 + int(match.group(2))
+        match = re.match("(\\d+)s", args[index + 1])
+        if match:
+          self.longerthan = int(match.group(1))
+        match = re.match("(\\d+)m", args[index + 1])
+        if match:
+          self.longerthan = int(match.group(1)) * 60
+        index += 2
+      elif args[index] == "-shorterthan":
+        match = re.match("(\\d+)m(\\d+)s", args[index + 1])
+        if match:
+          self.longerthan = int(match.group(1)) * 60 + int(match.group(2))
+        match = re.match("(\\d+)s", args[index + 1])
+        if match:
+          self.longerthan = int(match.group(1))
+        match = re.match("(\\d+)m", args[index + 1])
+        if match:
+          self.longerthan = int(match.group(1)) * 60
+        self.longerthan *= -1
+        index += 2
+      elif args[index] == "-with":
+        index += 1
+        while index < len(args) and not args[index].startswith("-"):
+          self.withNames.append(inputArgs[index])
+          index += 1
       else:
         index += 1
     if len(self.bosses) == 0:
@@ -180,32 +219,49 @@ class ArgParser:
         continue
       dirpath = os.path.join(root, boss)
       fileList = []
-      if self.longest:
-        combatTimeUsed = []
+      combatData = []
       for f in os.listdir(dirpath):
         if re.match(".+\\.evtc(\\.zip)?", f):
           filepath = os.path.join(dirpath, f)
           timestamp = os.path.getmtime(filepath)
           if (timestamp >= start and timestamp <= end) or self.allTime:
-            if self.win == ArgParser.RESULT_ALL and self.longest == False:
-              fileList.append(filepath)
-            else:
+            fileList.append(filepath)
+            if self.win != ArgParser.RESULT_ALL:
               print("Parsing {} log {}...".format(boss, f))
               evtc = EvtcParser.EvtcLog(filepath)
-              if self.win == ArgParser.RESULT_WIN and evtc.cbtWin:
-                fileList.append(filepath)
-                if self.longest:
-                  combatTimeUsed.append(evtc.combatTimeUsed)
-              elif self.win == ArgParser.RESULT_FAIL and not evtc.cbtWin:
-                fileList.append(filepath)
-                if self.longest:
-                  combatTimeUsed.append(evtc.combatTimeUsed)
-              elif self.win == ArgParser.RESULT_ALL:
-                fileList.append(filepath)
-                if self.longest:
-                  combatTimeUsed.append(evtc.combatTimeUsed)
+              combatData.append((filepath, evtc.combatTimeUsed, evtc.playerNames, evtc.cbtResult))
+            elif self.longest == True or self.longerthan != None or len(self.withNames) != 0:
+              print("Quick parsing {} log {}...".format(boss, f))
+              evtc = EvtcParser.EvtcLog(filepath, quickParse=True)
+              combatData.append((filepath, evtc.combatTimeUsed, evtc.playerNames))
+                  
       if len(fileList) == 0:
         continue
+
+      if self.win != ArgParser.RESULT_ALL or self.longerthan != None or len(self.withNames) != 0:
+        for cbtData in combatData:
+          if self.win == ArgParser.RESULT_WIN and not cbtData[3]:
+            fileList.remove(cbtData[0])
+          elif self.win == ArgParser.RESULT_FAIL and cbtData[3]:
+            fileList.remove(cbtData[0])
+          elif self.longerthan:
+            if self.longerthan > 0:
+              if cbtData[1] < (self.longerthan * 1000):
+                fileList.remove(cbtData[0])
+            else:
+              if cbtData[1] > (self.longerthan * -1000):
+                fileList.remove(cbtData[0])
+          elif len(self.withNames) > 0:
+            found = False
+            for name in self.withNames:
+              for player in cbtData[2]:
+                if player == name:
+                  found = True
+                  break
+              if found:
+                break
+            if not found:
+              fileList.remove(cbtData[0])
 
       if self.last:
         maxtime = 0
@@ -220,8 +276,8 @@ class ArgParser:
         maxtime = 0
         maxlog = None
         for i in range(0, len(fileList)):
-          if combatTimeUsed[i] > maxtime:
-            maxtime = combatTimeUsed[i]
+          if combatData[i][2] > maxtime:
+            maxtime = combatData[i][2]
             maxlog = fileList[i]
         ret.append(maxlog)
       else:
@@ -365,7 +421,7 @@ def syncFindAllRaidarLog(files, token, bossList, limit=100):
 
 def isRaidarAcceptable(file, bossList):
   pathComponent = file.split(os.path.sep)
-  bossname = pathComponent[len(pathComponent) - 2]
+  bossname = pathComponent[-2]
   for boss in bossList["Bosses"]:
     if boss["Name"] == bossname:
       return boss["Gw2RaidarAcceptable"]
@@ -462,7 +518,7 @@ if argParser.format == ArgParser.FORMAT_EMBED:
   for index in range(0, len(uploadFiles)):
     pathComponent = uploadFiles[index].split(os.path.sep)
     d = OrderedDict()
-    d["name"] = pathComponent[len(pathComponent) - 2]
+    d["name"] = pathComponent[-2]
     value = []
     if argParser.rh:
       value.append("[RaidHeroes]({})".format(raidheroesLinks[index]))
@@ -485,8 +541,8 @@ elif argParser.format == ArgParser.FORMAT_JSON:
   for index in range(0, len(uploadFiles)):
     pathComponent = uploadFiles[index].split(os.path.sep)
     d = OrderedDict()
-    d["Boss"] = pathComponent[len(pathComponent) - 2]
-    d["File"] = pathComponent[len(pathComponent) - 1]
+    d["Boss"] = pathComponent[-2]
+    d["File"] = pathComponent[-1]
     if argParser.rh:
       d["RaidHeroes"] = raidheroesLinks[index]
     if argParser.ei:
@@ -500,7 +556,7 @@ elif argParser.format == ArgParser.FORMAT_PLAIN:
   with open(argParser.outputPath, "w") as outfile:
     for index in range(0, len(uploadFiles)):
       pathComponent = uploadFiles[index].split(os.path.sep)
-      print("{}: {}".format(pathComponent[len(pathComponent) - 2], pathComponent[len(pathComponent) - 1]), file=outfile)
+      print("{}: {}".format(pathComponent[-2], pathComponent[-1]), file=outfile)
       if argParser.rh:
         print("  Raid Heroes: ", raidheroesLinks[index], file=outfile)
       if argParser.ei:

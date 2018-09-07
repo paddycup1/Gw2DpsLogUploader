@@ -25,17 +25,23 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
 * `-boss name1 name2 ...` (`-b`) : Select bosses names need to be uploaded. Use names or alias defined in `BossList.json`.Bosses, or use group name defined in `BossList.json`.Groups to select multiple boss.  
 
 ### Select time section
-* `-starttime yy/mm/dd [h:m[:s]]` (`-start`) : Select start point of target time section.
-* `-endtime yy/mm/dd [h:m[:s]]` (`-end`) : Select end point of target time section.
+* `-starttime [yy/]mm/dd [h:m[:s]]` (`-start`) : Select start point of target time section.
+* `-endtime [yy/]mm/dd [h:m[:s]]` (`-end`) : Select end point of target time section.
 * `-past 5h` or `-past 8d` (`-p`) : Select target time section from now back to given duration.
 * `-today` : Select target time section from current day 00:00:00 to 23:59:59.
 * `-yesterday` : Select target time section from yesterday day 00:00:00 to 23:59:59.
+* `-raidreset` : Select target time section to current RAID reset.
+* `-week` : Select target time section from current week Monday 00:00:00 to next Sunday 23:59:59.
 
 ### Miscellaneous
-* `-last` : Only upload the last log in each boss selected, time section and result(if `-win` or `-fail` is used), can't be used with `-longest`.
-* `-longest` : Only upload the longest log in each boss selected, time section and result(if `-win` or `-fail` is used), can't be used with `-last`.
+* `-longest` : Only upload the longest log in each boss after filtered by other arguments, can't be used with `-last`.
+* `-longerthan 5m[6s]` : Select the logs that fight time longer than given time.
+* `-shorterthan 5m[6s]` : Select the logs that fight time shorter than given time.
+* `-with name1 name2...` : Select the logs that contain given player name(can be either character name or display name).
+  * Above four commands (`-longest`, `-longerthan`, `-shorterthan`, `-with`) will let the tool quickly parse the evtc file, which will slightly increase the time cost.
 * `-win` and `-fail`: Select encounter result to be upload, the tool will upload both if not selected. 
-  * Note that command `-longest`, `-win` and `-fail` will let the tool parse every log in selected boss and time section, **this will significantly increase the time cost**.
+  * Note that command `-win` and `-fail` will let the tool entirely parse every log which in selected boss and time section, **this will significantly increase the time cost**.
+* `-last` : Only upload the last log in each boss after filtered by other arguments, can't be used with `-longest`.
 * `-sort type` : Sort output result by given type, type can be `name`, `time` or `encounter`.
 * `-reverse` (`-r`) : Reverse the sort result if `-sort` arguments is given.
 * `-gen [rh] [ei] [raidar]` : Select upload target, default is all select.
