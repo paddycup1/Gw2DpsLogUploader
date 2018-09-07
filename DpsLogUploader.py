@@ -74,6 +74,10 @@ class ArgParser:
         self.startTime = datetime.datetime.utcfromtimestamp(datetime.datetime.utcnow().timestamp() - ArgParser.SECONDS_IN_DAY * datetime.datetime.utcnow().weekday()).replace(hour=7, minute=30, second=0)
         self.endTime = datetime.datetime.utcfromtimestamp(self.startTime.timestamp() + ArgParser.SECONDS_IN_DAY * 7).replace(hour=7, minute=29, second=59)
         index += 1
+      elif args[index] == "-dailyreset":
+        self.startTime = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0)
+        self.endTime = datetime.datetime.utcnow().replace(hour=23, minute=59, second=59)
+        index += 1
       elif args[index] == "-last":
         self.last = True
         index += 1
