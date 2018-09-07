@@ -31,7 +31,7 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
 * `-today` : Select target time section from current day 00:00:00 to 23:59:59.
 * `-yesterday` : Select target time section from yesterday day 00:00:00 to 23:59:59.
 * `-raidreset` : Select target time section to current RAID reset.
-* `-raidreset` : Select target time section to current Daily reset.
+* `-dailyreset` : Select target time section to current Daily reset.
 * `-week` : Select target time section from current week Monday 00:00:00 to next Sunday 23:59:59.
 
 ### Miscellaneous
