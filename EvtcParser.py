@@ -209,61 +209,59 @@ class EvtcLog:
   def parseEvtc(self, evtc, size, quickParse):
     if evtc.read(4).decode("ascii") != "EVTC":
       raise BaseException("Input file isn't evtc file or standard zip.")
+    fff = open("EvtcLog.txt", "w", encoding="utf8")
     self.dateText = evtc.read(8).decode("ascii")
-    self.revision = evtc.read(1)
+    self.revision = evtc.read(1)[0]
     self.bossId = int.from_bytes(evtc.read(2), byteorder="little", signed=False)
     evtc.seek(16)
+    if self.bossId == 16246:   #For Xera
+      self.bossId = 16286
     self.cbtResult = False
     self.playerNames = []
     self.agentCount = int.from_bytes(evtc.read(4), byteorder="little", signed=False)
     self.agents = []
     playersAddr = []
+    bossAddr = None
     for i in range(0, self.agentCount):
       agent = Agent(evtc.read(Agent.LEN))
       self.agents.append(agent)
       if agent.isPlayer:
+        print(agent.name, agent.addr, file=fff)
         playersAddr.append(agent.addr)
         self.playerNames.append(agent.displayName)
         self.playerNames.append(agent.name)
+      else:
+        if agent.specialID == self.bossId:
+          bossAddr = agent.addr
 
     self.skillCount = int.from_bytes(evtc.read(4), byteorder="little", signed=False)
     self.skills = []
     for i in range(0, self.skillCount):
       self.skills.append(Skill(evtc.read(Skill.LEN)))
+    if self.revision == 0:
+      CombatEvent = CombatEvent0
+    else:
+      CombatEvent = CombatEvent1
     if not quickParse:
       self.combatEvents = []
-      if self.revision == 0:
-        data = evtc.read(CombatEvent0.LEN)
-        while len(data) == CombatEvent0.LEN:
-          self.combatEvents.append(CombatEvent0(data))
-          data = evtc.read(CombatEvent0.LEN)
-      else:
-        data = evtc.read(CombatEvent1.LEN)
-        while len(data) == CombatEvent1.LEN:
-          self.combatEvents.append(CombatEvent1(data))
-          data = evtc.read(CombatEvent1.LEN)
-      for event in self.combatEvents:
-        if event.is_statechange == CbtStateChange.CBTS_CHANGEDEAD:
-          for addr in playersAddr:
-            if event.src_agent == addr:
-              playersAddr.remove(addr)
-              break
-      if len(playersAddr) != 0:
-        self.cbtResult = True
+      data = evtc.read(CombatEvent.LEN)
+      while len(data) == CombatEvent.LEN:
+        evtcLog = CombatEvent(data)
+        if evtcLog.src_agent == bossAddr:
+          if evtcLog.is_statechange == CbtStateChange.CBTS_CHANGEDEAD:
+            self.cbtResult = True
+          if evtcLog.is_statechange == CbtStateChange.CBTS_HEALTHUPDATE and evtcLog.dst_agent < 100:
+            self.cbtResult = True
+        self.combatEvents.append(evtcLog)
+        data = evtc.read(CombatEvent.LEN)
+
       self.combatTimeUsed = self.combatEvents[-1].time - self.combatEvents[0].time
     else:
-      if self.revision == 0:
-        data = evtc.read(CombatEvent0.LEN)
-        firstLog = CombatEvent0(data)
-        evtc.seek(size - CombatEvent0.LEN)
-        data = evtc.read(CombatEvent0.LEN)
-        lastLog = CombatEvent0(data)
-      else:
-        data = evtc.read(CombatEvent1.LEN)
-        firstLog = CombatEvent1(data)
-        evtc.seek(size - CombatEvent1.LEN)
-        data = evtc.read(CombatEvent1.LEN)
-        lastLog = CombatEvent1(data)
+      data = evtc.read(CombatEvent.LEN)
+      firstLog = CombatEvent(data)
+      evtc.seek(size - CombatEvent.LEN)
+      data = evtc.read(CombatEvent.LEN)
+      lastLog = CombatEvent(data)
       self.combatTimeUsed = lastLog.time - firstLog.time
 
 
