@@ -60,7 +60,6 @@ class ArgParser:
       elif args[index] == "-today":
         self.startTime = datetime.datetime.now().replace(hour=0, minute=0, second=0)
         self.endTime = datetime.datetime.now().replace(hour=23, minute=59, second=59)
-        datetime.datetime()
         index += 1
       elif args[index] == "-yesterday":
         self.startTime = datetime.datetime.fromtimestamp(datetime.datetime.now().timestamp() - ArgParser.SECONDS_IN_DAY).replace(hour=0, minute=0, second=0)
@@ -230,14 +229,14 @@ class ArgParser:
           timestamp = os.path.getmtime(filepath)
           if (timestamp >= start and timestamp <= end) or self.allTime:
             fileList.append(filepath)
-            if self.win != ArgParser.RESULT_ALL:
+            if self.win != ArgParser.RESULT_ALL or self.longest == True or self.longerthan != None or len(self.withNames) != 0:
               print("Parsing {} log {}...".format(boss, f))
               evtc = EvtcParser.EvtcLog(filepath)
               combatData.append((filepath, evtc.combatTimeUsed, evtc.playerNames, evtc.cbtResult))
-            elif self.longest == True or self.longerthan != None or len(self.withNames) != 0:
-              print("Quick parsing {} log {}...".format(boss, f))
-              evtc = EvtcParser.EvtcLog(filepath, quickParse=True)
-              combatData.append((filepath, evtc.combatTimeUsed, evtc.playerNames))
+            #elif self.longest == True or self.longerthan != None or len(self.withNames) != 0:
+            #  print("Quick parsing {} log {}...".format(boss, f))
+            #  evtc = EvtcParser.EvtcLog(filepath, quickParse=True)
+            #  combatData.append((filepath, evtc.combatTimeUsed, evtc.playerNames))
                   
       if len(fileList) == 0:
         continue

@@ -9,6 +9,7 @@ Install `requests2` module: `pip3 install requests2`
 Run `python DpsLogUploader.py -init username password`  
 username and password is used to get account token from Gw2Raidar.  
 This command will generate `Config.json` in current directory, please open it with any text editor, update your acrdps log path into `LogPath` field.  
+You should seperate your path with double back slash (`\\`) because I use json format. ex: `C:\\Users\\username\\Documents\\Guild Wars 2\\addons\\arcdps\\arcdps.cbtlogs`
 The field `Gw2RaidarToken` should be automatically filled by `-init` command.  
 The field `DiscordBotToken` is optional, this is used by `EmbedHelper.py` to print embed report to discord channel. It can be any value or deleted if `EmbedHelper.py` doesn't used.
 
@@ -33,15 +34,15 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
 * `-raidreset` : Select target time section to current RAID reset.
 * `-dailyreset` : Select target time section to current Daily reset.
 * `-week` : Select target time section from current week Monday 00:00:00 to next Sunday 23:59:59.
+* `-alltime` : Ignore time limit.
 
 ### Miscellaneous
 * `-longest` : Only upload the longest log in each boss after filtered by other arguments, can't be used with `-last`.
 * `-longerthan 5m[6s]` : Select the logs that fight time longer than given time.
 * `-shorterthan 5m[6s]` : Select the logs that fight time shorter than given time.
 * `-with name1 name2...` : Select the logs that contain given player name(can be either character name or display name).
-  * Above four commands (`-longest`, `-longerthan`, `-shorterthan`, `-with`) will let the tool quickly parse the evtc file, which will slightly increase the time cost.
 * `-win` and `-fail`: Select encounter result to be upload, the tool will upload both if not selected. 
-  * Note that command `-win` and `-fail` will let the tool entirely parse every log which in selected boss and time section, **this will significantly increase the time cost**.
+  * Note that above command will let the tool entirely parse every log which in selected boss and time section, **this will significantly increase the time cost**.
 * `-last` : Only upload the last log in each boss after filtered by other arguments, can't be used with `-longest`.
 * `-sort type` : Sort output result by given type, type can be `name`, `time` or `encounter`.
 * `-reverse` (`-r`) : Reverse the sort result if `-sort` arguments is given.

@@ -213,9 +213,13 @@ class EvtcLog:
     self.dateText = evtc.read(8).decode("ascii")
     self.revision = evtc.read(1)[0]
     self.bossId = int.from_bytes(evtc.read(2), byteorder="little", signed=False)
-    evtc.seek(16)
+    #evtc.seek(16)
+    evtc.read(1)
     if self.bossId == 16246:   #For Xera
       self.bossId = 16286
+    lifethreshold = 50
+    if self.bossId == 17949:   #For Artsariiv
+      lifethreshold = 10050
     self.cbtResult = False
     self.playerNames = []
     self.agentCount = int.from_bytes(evtc.read(4), byteorder="little", signed=False)
@@ -247,10 +251,10 @@ class EvtcLog:
       data = evtc.read(CombatEvent.LEN)
       while len(data) == CombatEvent.LEN:
         evtcLog = CombatEvent(data)
-        if evtcLog.src_agent == bossAddr:
+        if not self.cbtResult and evtcLog.src_agent == bossAddr:
           if evtcLog.is_statechange == CbtStateChange.CBTS_CHANGEDEAD:
             self.cbtResult = True
-          if evtcLog.is_statechange == CbtStateChange.CBTS_HEALTHUPDATE and evtcLog.dst_agent < 100:
+          elif evtcLog.is_statechange == CbtStateChange.CBTS_HEALTHUPDATE and evtcLog.dst_agent < lifethreshold:
             self.cbtResult = True
         self.combatEvents.append(evtcLog)
         data = evtc.read(CombatEvent.LEN)
@@ -263,7 +267,3 @@ class EvtcLog:
       data = evtc.read(CombatEvent.LEN)
       lastLog = CombatEvent(data)
       self.combatTimeUsed = lastLog.time - firstLog.time
-
-
-
-

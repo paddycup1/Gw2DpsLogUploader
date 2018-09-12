@@ -6,3 +6,8 @@ output.json
 /__pycache__
 /BossIds.json
 /output
+/build
+/dist
+/Gw2DpsLogUploader
+DpsLogUploader.spec
+EmbedHelper.spec
