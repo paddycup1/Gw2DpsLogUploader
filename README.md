@@ -16,6 +16,7 @@ The field `Gw2RaidarToken` should be automatically filled by `-init` command.
 The field `DiscordBotToken` is optional, this is used by `EmbedHelper.exe` to print embed report to discord channel. It can be any value or deleted if `EmbedHelper.exe` doesn't used.
 
 ## Usage
+
 `DpsLogUploader.exe [arguments]`  
 
 There are two things need to give with arguments: which bosses and which time section  
@@ -24,7 +25,11 @@ Select time section with `-starttime` + `-endtime` combination or `-past`, `-tod
 
 ## Supported Arguments
 
+All Arguments is case insensitive except the player name and embed title/description.  
+Arguments order is meaningless, just put all argument you want in any order.  
+
 ### Select boss
+
 * `-boss name1 name2 ...` (`-b`) : Select bosses names need to be uploaded. Use names or alias defined in `BossList.json`.Bosses, or use group name defined in `BossList.json`.Groups to select multiple boss.  
 
 ### Select time section
