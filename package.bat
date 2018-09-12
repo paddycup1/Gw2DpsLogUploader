@@ -1,8 +1,9 @@
 rmdir /s/q .\dist
 rmdir /s/q .\build
-pyinstaller .\DpsLogUploader.py
-pyinstaller .\EmbedHelper.py
-mkdir .\package
-move .\dist.\DpsLogUploader\DpsLogUploader.exe .\package\DpsLogUploader.exe 
-move .\dist.\EmbedHelper\EmbedHelper.exe .\package\EmbedHelper.exe 
-move .\BossList.json .\package\BossList.json 
+rmdir /s/q .\Gw2DpsLogUploader
+pyinstaller -F .\DpsLogUploader.py
+pyinstaller -F .\EmbedHelper.py
+mkdir .\Gw2DpsLogUploader
+move .\dist.\DpsLogUploader.exe .\Gw2DpsLogUploader\DpsLogUploader.exe 
+move .\dist.\EmbedHelper.exe .\Gw2DpsLogUploader\EmbedHelper.exe 
+copy .\BossList.json .\Gw2DpsLogUploader\BossList.json 

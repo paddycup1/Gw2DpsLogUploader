@@ -223,7 +223,11 @@ class ArgParser:
       dirpath = os.path.join(root, boss)
       fileList = []
       combatData = []
-      for f in os.listdir(dirpath):
+      files = []
+      for path, dirs, filenames in os.walk(dirpath):
+        for f in filenames:
+          files.append(os.path.join(path, f))
+      for f in files:
         if re.match(".+\\.evtc(\\.zip)?", f):
           filepath = os.path.join(dirpath, f)
           timestamp = os.path.getmtime(filepath)
@@ -422,9 +426,8 @@ def syncFindAllRaidarLog(files, token, bossList, limit=100):
       ret["LostCount"] += 1
   return ret
 
-def isRaidarAcceptable(file, bossList):
-  pathComponent = file.split(os.path.sep)
-  bossname = pathComponent[-2]
+def isRaidarAcceptable(log, bossList):
+  bossname = log.split(os.path.sep)[len(config["LogPath"].split(os.path.sep))]
   for boss in bossList["Bosses"]:
     if boss["Name"] == bossname:
       return boss["Gw2RaidarAcceptable"]
@@ -521,7 +524,7 @@ if argParser.format == ArgParser.FORMAT_EMBED:
   for index in range(0, len(uploadFiles)):
     pathComponent = uploadFiles[index].split(os.path.sep)
     d = OrderedDict()
-    d["name"] = pathComponent[-2]
+    d["name"] = uploadFiles[index].split(os.path.sep)[len(config["LogPath"].split(os.path.sep))]
     value = []
     if argParser.rh:
       value.append("[RaidHeroes]({})".format(raidheroesLinks[index]))

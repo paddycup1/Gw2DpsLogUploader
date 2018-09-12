@@ -209,7 +209,6 @@ class EvtcLog:
   def parseEvtc(self, evtc, size, quickParse):
     if evtc.read(4).decode("ascii") != "EVTC":
       raise BaseException("Input file isn't evtc file or standard zip.")
-    fff = open("EvtcLog.txt", "w", encoding="utf8")
     self.dateText = evtc.read(8).decode("ascii")
     self.revision = evtc.read(1)[0]
     self.bossId = int.from_bytes(evtc.read(2), byteorder="little", signed=False)
@@ -230,7 +229,6 @@ class EvtcLog:
       agent = Agent(evtc.read(Agent.LEN))
       self.agents.append(agent)
       if agent.isPlayer:
-        print(agent.name, agent.addr, file=fff)
         playersAddr.append(agent.addr)
         self.playerNames.append(agent.displayName)
         self.playerNames.append(agent.name)
