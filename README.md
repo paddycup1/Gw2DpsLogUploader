@@ -2,6 +2,10 @@
 
 A command line tool used to pick specific log and upload to [Gw2Raidar](https://www.gw2raidar.com) and [dps.report](https://dps.report/).
 
+## Download
+
+[Releases Page](https://github.com/paddycup1/Gw2DpsLogUploader/releases)
+
 ## Initialize
 
 Run `DpsLogUploader.exe -init username password`  
