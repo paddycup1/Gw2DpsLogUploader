@@ -81,14 +81,14 @@ You can customer boss alias by edit this file:
         "Any aliases you want, any name defined here can be used in -boss arguments"
       ],
       "Gw2RaidarAcceptable": true,
-      "This is comment for Gw2RaidarAcceptable": "If the boss can't be analyzed by Gw2Raidar, Gw2RaidarAcceptable filed should set to false. Or the upload tool will try to find this boss in Gw2Raidar encounter list after upload complete."
+      "This is comment for Gw2RaidarAcceptable": "If the boss can't be analyzed by Gw2Raidar, Gw2RaidarAcceptable field should set to false. Or the upload tool will try to find this boss in Gw2Raidar encounter list after upload complete."
     }
   ],
   "Groups": [
     {
       "Name": "Any name you want, this name is used to refer group in -boss arguments",
       "Bosses": [
-        "Name filed of boss you want to add into this group. Don't use alias here"
+        "Name field of boss you want to add into this group. Don't use alias here"
       ]
     }
   ]
