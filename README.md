@@ -9,7 +9,7 @@ Install `requests2` module: `pip3 install requests2`
 Run `python DpsLogUploader.py -init username password`  
 username and password is used to get account token from Gw2Raidar.  
 This command will generate `Config.json` in current directory, please open it with any text editor, update your acrdps log path into `LogPath` field.  
-You should seperate your path with double back slash (`\\`) because I use json format. ex: `C:\\Users\\username\\Documents\\Guild Wars 2\\addons\\arcdps\\arcdps.cbtlogs`
+You should seperate your path with double back slash (`\\`) because I use json format. ex: `C:\\Users\\username\\Documents\\Guild Wars 2\\addons\\arcdps\\arcdps.cbtlogs`  
 The field `Gw2RaidarToken` should be automatically filled by `-init` command.  
 The field `DiscordBotToken` is optional, this is used by `EmbedHelper.py` to print embed report to discord channel. It can be any value or deleted if `EmbedHelper.py` doesn't used.
 
