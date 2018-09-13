@@ -2,9 +2,11 @@
 
 A command line tool used to pick specific log and upload to [Gw2Raidar](https://www.gw2raidar.com) and [dps.report](https://dps.report/).
 
+[中文說明](https://github.com/paddycup1/Gw2DpsLogUploader/blob/master/中文說明.md)
+
 ## Download
 
-[Releases Page](https://github.com/paddycup1/Gw2DpsLogUploader/releases)
+[Release Page](https://github.com/paddycup1/Gw2DpsLogUploader/releases)
 
 ## Initialize
 

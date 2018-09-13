@@ -214,11 +214,13 @@ class EvtcLog:
     self.bossId = int.from_bytes(evtc.read(2), byteorder="little", signed=False)
     #evtc.seek(16)
     evtc.read(1)
+    lifethreshold = 50
+
     if self.bossId == 16246:   #For Xera
       self.bossId = 16286
-    lifethreshold = 50
     if self.bossId == 17949:   #For Artsariiv
       lifethreshold = 10050
+
     self.cbtResult = False
     self.playerNames = []
     self.agentCount = int.from_bytes(evtc.read(4), byteorder="little", signed=False)
