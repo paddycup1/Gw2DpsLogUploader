@@ -220,6 +220,8 @@ class EvtcLog:
       self.bossId = 16286
     if self.bossId == 17949:   #For Artsariiv
       lifethreshold = 10050
+    if self.bossId == 17154 or self.bossId == 16728834:
+      lifethreshold = 1000
 
     self.cbtResult = False
     self.playerNames = []
@@ -267,3 +269,18 @@ class EvtcLog:
       data = evtc.read(CombatEvent.LEN)
       lastLog = CombatEvent(data)
       self.combatTimeUsed = lastLog.time - firstLog.time
+
+if __name__ == "__main__":
+  log = EvtcLog(sys.argv[1])
+  with open("EvtcLog.txt", "w", encoding="utf8") as output:
+    print("Agents:", file=output)
+    for agent in log.agents:
+      print(agent.name, end=" ", file=output)
+      if agent.isPlayer:
+        print(agent.displayName, agent.addr, file=output)
+      else:
+        print(agent.specialID, agent.addr, file=output)
+    
+    print("Events:", file=output)
+    for event in log.combatEvents:
+      print("Src:", event.src_agent, "Dst:", event.dst_agent, "StateChange:", event.is_statechange, file=output)

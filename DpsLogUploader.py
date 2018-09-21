@@ -42,6 +42,8 @@ class ArgParser:
     self.longest = False
     self.longerthan = None
     self.withNames = []
+    self.description = ""
+    self.embedColor = 0xD02906
 
     args = []
     for arg in inputArgs:
@@ -152,12 +154,14 @@ class ArgParser:
       elif args[index] == "-embed":
         self.format = ArgParser.FORMAT_EMBED
         self.title = args[index + 1]
-        if index + 2 < len(args) and not args[index + 2].startswith("-"):
-          self.description = args[index + 2]
-          index += 3
-        else:
-          self.description = ""
-          index += 2
+        index += 2
+        while index < len(args) and not args[index].startswith("-"):
+          if args[index].startswith("#"):
+            self.embedColor = int(args[index][1:], 16)
+          else:
+            self.description = args[index]
+          index += 1
+
       elif args[index] == "-gen":
         index += 1
         self.rh = False
@@ -269,7 +273,8 @@ class ArgParser:
                 break
             if not found:
               fileList.remove(cbtData[0])
-
+      if len(fileList) == 0:
+        continue
       if self.last:
         maxtime = 0
         lastlog = None
@@ -518,7 +523,7 @@ if argParser.format == ArgParser.FORMAT_EMBED:
   output = OrderedDict()
   output["title"] = argParser.title
   output["description"] = argParser.description
-  output["color"] = 0xD02906
+  output["color"] = argParser.embedColor
   output["thumbnail"] = dict([("url", "https://render.guildwars2.com/file/5866630DA52DCB5C423FB81ECF69FD071611E36B/1128644.png")])
   output["fields"] = []
   for index in range(0, len(uploadFiles)):
@@ -535,6 +540,7 @@ if argParser.format == ArgParser.FORMAT_EMBED:
         value.append("[Raidar]({})".format(raidarlinks["Results"][index]))
       else:
         value.append("~~Raidar~~")
+        print("no result for", uploadFiles[index])
     
     d["value"] = value[0]
     for i in range(1, len(value)):
@@ -547,7 +553,7 @@ elif argParser.format == ArgParser.FORMAT_JSON:
   for index in range(0, len(uploadFiles)):
     pathComponent = uploadFiles[index].split(os.path.sep)
     d = OrderedDict()
-    d["Boss"] = pathComponent[-2]
+    d["Boss"] = pathComponent[len(config["LogPath"].split(os.path.sep))]
     d["File"] = pathComponent[-1]
     if argParser.rh:
       d["RaidHeroes"] = raidheroesLinks[index]
@@ -562,7 +568,7 @@ elif argParser.format == ArgParser.FORMAT_PLAIN:
   with open(argParser.outputPath, "w") as outfile:
     for index in range(0, len(uploadFiles)):
       pathComponent = uploadFiles[index].split(os.path.sep)
-      print("{}: {}".format(pathComponent[-2], pathComponent[-1]), file=outfile)
+      print("{}: {}".format(pathComponent[len(config["LogPath"].split(os.path.sep))], pathComponent[-1]), file=outfile)
       if argParser.rh:
         print("  Raid Heroes: ", raidheroesLinks[index], file=outfile)
       if argParser.ei:
