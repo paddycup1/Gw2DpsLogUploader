@@ -153,13 +153,13 @@ class ArgParser:
         index += 2
       elif args[index] == "-embed":
         self.format = ArgParser.FORMAT_EMBED
-        self.title = args[index + 1]
+        self.title = inputArgs[index + 1]
         index += 2
         while index < len(args) and not args[index].startswith("-"):
           if args[index].startswith("#"):
             self.embedColor = int(args[index][1:], 16)
           else:
-            self.description = args[index]
+            self.description = inputArgs[index]
           index += 1
 
       elif args[index] == "-gen":
@@ -432,7 +432,7 @@ def syncFindAllRaidarLog(files, token, bossList, limit=100):
   return ret
 
 def isRaidarAcceptable(log, bossList):
-  bossname = log.split(os.path.sep)[len(config["LogPath"].split(os.path.sep))]
+  bossname = log.split(os.path.sep)[pathLevel]
   for boss in bossList["Bosses"]:
     if boss["Name"] == bossname:
       return boss["Gw2RaidarAcceptable"]
@@ -499,6 +499,7 @@ if "LogPath" not in config:
   print("Can't find arcdps log path in config file! (field name: LogPath)")
   sys.exit(0)
 
+pathLevel = pathLevel
 argParser = ArgParser(sys.argv, bossList)
 uploadFiles = argParser.filterLogs(config["LogPath"])
 
@@ -529,7 +530,7 @@ if argParser.format == ArgParser.FORMAT_EMBED:
   for index in range(0, len(uploadFiles)):
     pathComponent = uploadFiles[index].split(os.path.sep)
     d = OrderedDict()
-    d["name"] = uploadFiles[index].split(os.path.sep)[len(config["LogPath"].split(os.path.sep))]
+    d["name"] = uploadFiles[index].split(os.path.sep)[pathLevel]
     value = []
     if argParser.rh:
       value.append("[RaidHeroes]({})".format(raidheroesLinks[index]))
@@ -553,7 +554,7 @@ elif argParser.format == ArgParser.FORMAT_JSON:
   for index in range(0, len(uploadFiles)):
     pathComponent = uploadFiles[index].split(os.path.sep)
     d = OrderedDict()
-    d["Boss"] = pathComponent[len(config["LogPath"].split(os.path.sep))]
+    d["Boss"] = pathComponent[pathLevel]
     d["File"] = pathComponent[-1]
     if argParser.rh:
       d["RaidHeroes"] = raidheroesLinks[index]
@@ -568,7 +569,7 @@ elif argParser.format == ArgParser.FORMAT_PLAIN:
   with open(argParser.outputPath, "w") as outfile:
     for index in range(0, len(uploadFiles)):
       pathComponent = uploadFiles[index].split(os.path.sep)
-      print("{}: {}".format(pathComponent[len(config["LogPath"].split(os.path.sep))], pathComponent[-1]), file=outfile)
+      print("{}: {}".format(pathComponent[pathLevel], pathComponent[-1]), file=outfile)
       if argParser.rh:
         print("  Raid Heroes: ", raidheroesLinks[index], file=outfile)
       if argParser.ei:
