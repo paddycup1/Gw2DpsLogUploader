@@ -221,7 +221,6 @@ class ArgParser:
     start = self.startTime.timestamp()
     end   = self.endTime.timestamp()
     for boss in self.bosses:
-
       if not os.path.exists(os.path.join(root, boss)):
         continue
       dirpath = os.path.join(root, boss)
@@ -499,7 +498,7 @@ if "LogPath" not in config:
   print("Can't find arcdps log path in config file! (field name: LogPath)")
   sys.exit(0)
 
-pathLevel = pathLevel
+pathLevel = len(config["LogPath"].split(os.path.sep))
 argParser = ArgParser(sys.argv, bossList)
 uploadFiles = argParser.filterLogs(config["LogPath"])
 

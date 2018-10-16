@@ -152,6 +152,27 @@
         "StdGolem"
       ],
       "Gw2RaidarAcceptable": true
+    },
+    {
+      "Name": "Conjured Amalgamate",
+      "Aliases": [
+        "6-1"
+      ],
+      "Gw2RaidarAcceptable": true
+    },
+    {
+      "Name": "Nikare",
+      "Aliases": [
+        "6-2"
+      ],
+      "Gw2RaidarAcceptable": true
+    },
+    {
+      "Name": "Qadim",
+      "Aliases": [
+        "6-3"
+      ],
+      "Gw2RaidarAcceptable": true
     }
   ],
   "Groups": [
@@ -191,6 +212,14 @@
       "Bosses": [
         "Soulless Horror",
         "Dhuum"
+      ]
+    },
+    {
+      "Name": "W5",
+      "Bosses": [
+        "Conjured Amalgamate",
+        "Nikare",
+        "Qadim"
       ]
     },
     {

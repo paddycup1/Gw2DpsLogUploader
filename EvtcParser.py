@@ -196,10 +196,12 @@ class EvtcLog:
       with zipfile.ZipFile(filepath) as zipFile:
         namelist = zipFile.namelist()
         for n in namelist:
-          if n.endswith(".evtc"):
+          if n.endswith(".evtc") or n.endswith(".evtc.tmp"):
             filename = n
-        if not filename:
-          raise BaseException("can't find evtc file in zip file.")
+        try:
+          filename
+        except:
+          raise BaseException("can't find evtc file in zip file {}".format(filepath))
         with zipFile.open(filename) as evtcFile:
           self.parseEvtc(evtcFile, zipFile.infolist()[0].file_size, quickParse)
     else:
@@ -273,6 +275,8 @@ class EvtcLog:
 if __name__ == "__main__":
   log = EvtcLog(sys.argv[1])
   with open("EvtcLog.txt", "w", encoding="utf8") as output:
+    print("BossId:", log.bossId, file=output)
+    print("Result:", log.cbtResult, file=output)
     print("Agents:", file=output)
     for agent in log.agents:
       print(agent.name, end=" ", file=output)
