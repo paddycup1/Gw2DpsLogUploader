@@ -55,9 +55,10 @@ class ArgParser:
         index += 1
         while index < len(args) and not args[index].startswith("-"):
           newBoss = searchBossName(bossList, args[index])
-          for boss in newBoss:
-            if boss not in self.bosses:
-              self.bosses.append(boss)
+          if newBoss != None:
+            for boss in newBoss:
+              if boss not in self.bosses:
+                self.bosses.append(boss)
           index += 1
       elif args[index] == "-today":
         self.startTime = datetime.datetime.now().replace(hour=0, minute=0, second=0)
@@ -351,6 +352,7 @@ def uploadDpsReport(path, gen="rh"):
       return response.json()['permalink']
     else:
       print("Upload file", path, "error:", response.status_code)
+      return False
 
 def gw2RaidarGetToken(user, paswd):
   url = "https://www.gw2raidar.com/api/v2/token"
@@ -376,7 +378,9 @@ def uploadGw2Raidar(path, token):
     }
     response = requests.put(url, files=files, headers=headers)
     if response.status_code != 200:
-      print("Error: ", response.status_code, response.text)
+      print("Upload Gw2 Raidar Error: ", response.status_code)
+      return False
+    return True
 
 def getGw2RaiderEncounterList(token, offset=0, limit=100):
   url = "https://www.gw2raidar.com/api/v2/encounters"
@@ -391,7 +395,8 @@ def getGw2RaiderEncounterList(token, offset=0, limit=100):
   if response.status_code == 200:
     return response.json()
   else:
-    print("Error: ", response.status_code, response.text)
+    print("Get Raidar Encounter List Error: ", response.status_code)
+    return None
 
 def findGw2RaidarLog(path, token, limit=100):
   name = os.path.basename(path)
@@ -420,11 +425,13 @@ def syncFindAllRaidarLog(files, token, bossList, limit=100):
     if not isRaidarAcceptable(file, bossList):
       ret["Results"].append(None)
       continue
-    for encounter in encounters["results"]:
-      if os.path.basename(file) == encounter["filename"]:
-        ret["Results"].append("https://www.gw2raidar.com/encounter/" + encounter["url_id"])
-        found = True
-        break
+    if encounters:
+      for encounter in encounters["results"]:
+        if os.path.basename(file) == encounter["filename"]:
+          ret["Results"].append("https://www.gw2raidar.com/encounter/" + encounter["url_id"])
+          found = True
+          break
+
     if not found:
       ret["Results"].append(None)
       ret["LostCount"] += 1
@@ -446,7 +453,8 @@ def getRaidarBossAreas(token):
   if response.status_code == 200:
     return response.json()
   else:
-    print("Error: ", response.status_code, response.text)
+    print("Get Raidar Boss Areas Error: ", response.status_code)
+    return None
 
 
 """
@@ -507,13 +515,24 @@ eliteinsightLinks = []
 if argParser.raidar:
   for log in uploadFiles:
     if isRaidarAcceptable(log, bossList):
-      uploadGw2Raidar(log, config["Gw2RaidarToken"])
+      Status = uploadGw2Raidar(log, config["Gw2RaidarToken"])
+      if not Status:
+        print("Try again...")
+        uploadGw2Raidar(log, config["Gw2RaidarToken"])
   print("\n", end="")
 
 for log in uploadFiles:
   if argParser.rh:
-    raidheroesLinks.append(uploadDpsReport(log, gen="rh"))
+    link = uploadDpsReport(log, gen="rh")
+    if not link:
+      print("Try again...")
+      link = uploadDpsReport(log, gen="rh")
+    raidheroesLinks.append(link)
   if argParser.ei:
+    link = uploadDpsReport(log, gen="ei")
+    if not link:
+      print("Try again...")
+      link = uploadDpsReport(log, gen="ei")
     eliteinsightLinks.append(uploadDpsReport(log, gen="ei"))
   
 if argParser.raidar:
