@@ -517,7 +517,8 @@ if argParser.raidar:
     if isRaidarAcceptable(log, bossList):
       Status = uploadGw2Raidar(log, config["Gw2RaidarToken"])
       if not Status:
-        print("Try again...")
+        print("Retry after 1s...")
+        sleep(1)
         uploadGw2Raidar(log, config["Gw2RaidarToken"])
   print("\n", end="")
 
@@ -525,15 +526,17 @@ for log in uploadFiles:
   if argParser.rh:
     link = uploadDpsReport(log, gen="rh")
     if not link:
-      print("Try again...")
+      print("Retry after 1s...")
+      sleep(1)
       link = uploadDpsReport(log, gen="rh")
     raidheroesLinks.append(link)
   if argParser.ei:
     link = uploadDpsReport(log, gen="ei")
     if not link:
-      print("Try again...")
+      print("Retry after 1s...")
+      sleep(1)
       link = uploadDpsReport(log, gen="ei")
-    eliteinsightLinks.append(uploadDpsReport(log, gen="ei"))
+    eliteinsightLinks.append(link)
   
 if argParser.raidar:
   raidarlinks = findAllRaidarLog(uploadFiles, config["Gw2RaidarToken"], bossList)
