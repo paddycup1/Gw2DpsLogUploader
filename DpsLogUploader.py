@@ -171,7 +171,7 @@ class ArgParser:
         while index < len(args) and not args[index].startswith("-"):
           if args[index] == "rh" or args[index] == "raidheroes":
             self.rh = True
-          elif args[index] == "ei" or args[index] == "eilteinsight":
+          elif args[index] == "ei" or args[index] == "eliteinsights":
             self.ei = True
           elif args[index] == "rd" or args[index] == "raidar":
             self.raidar = True
