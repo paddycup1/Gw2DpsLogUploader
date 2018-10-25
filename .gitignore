@@ -11,3 +11,4 @@ output.json
 /Gw2DpsLogUploader
 DpsLogUploader.spec
 EmbedHelper.spec
+EvtcParser.spec

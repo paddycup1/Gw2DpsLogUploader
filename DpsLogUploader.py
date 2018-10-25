@@ -26,6 +26,7 @@ class ArgParser:
   RESULT_ALL  = 0
   RESULT_FAIL = -1
   def __init__(self, inputArgs, bossList):
+    self.bossList = bossList
     self.bosses = []
     self.endTime = datetime.datetime.now()
     self.startTime = datetime.datetime.fromtimestamp(self.endTime.timestamp() - ArgParser.SECONDS_IN_DAY)
@@ -44,6 +45,10 @@ class ArgParser:
     self.withNames = []
     self.description = ""
     self.embedColor = 0xD02906
+    self.raidarWaitTime = 20
+    self.raidarRetryCount = 15
+    self.raidarSearchCount = 100
+    self.notOnlyRaidar = False
 
     args = []
     for arg in inputArgs:
@@ -154,6 +159,9 @@ class ArgParser:
         index += 2
       elif args[index] == "-embed":
         self.format = ArgParser.FORMAT_EMBED
+        if index + 1 >= len(inputArgs) or inputArgs[index + 1].startswith("-"):
+          print("Please provide title for embed content.")
+          sys.exit(0)
         self.title = inputArgs[index + 1]
         index += 2
         while index < len(args) and not args[index].startswith("-"):
@@ -162,7 +170,6 @@ class ArgParser:
           else:
             self.description = inputArgs[index]
           index += 1
-
       elif args[index] == "-gen":
         index += 1
         self.rh = False
@@ -181,9 +188,10 @@ class ArgParser:
           sys.exit(0)
       elif args[index] == "-json":
         self.format = ArgParser.FORMAT_JSON
-      elif args[index] == "-longest":
         index += 1
+      elif args[index] == "-longest":
         self.longest = True
+        index += 1
       elif args[index] == "-longerthan":
         match = re.match("(\\d+)m(\\d+)s", args[index + 1])
         if match:
@@ -212,6 +220,18 @@ class ArgParser:
         while index < len(args) and not args[index].startswith("-"):
           self.withNames.append(inputArgs[index])
           index += 1
+      elif args[index] == "-raidarwaittime":
+        self.raidarWaitTime = int(args[index + 1])
+        index += 2
+      elif args[index] == "-raidarretrycount":
+        self.raidarRetryCount = int(args[index + 1])
+        index += 2
+      elif args[index] == "-raidarsearchcount":
+        self.raidarSearchCount = int(args[index + 1])
+        index += 2
+      elif args[index] == "-notonlyraidar" or args[index] == "-nord":
+        self.notOnlyRaidar = True
+        index += 1
       else:
         index += 1
     if len(self.bosses) == 0:
@@ -224,6 +244,11 @@ class ArgParser:
     for boss in self.bosses:
       if not os.path.exists(os.path.join(root, boss)):
         continue
+      lifethreshold = -1
+      for b in self.bossList["Bosses"]:
+        if b["Name"] == boss:
+          if "LifeThreshold" in b:
+            lifethreshold = b["LifeThreshold"]
       dirpath = os.path.join(root, boss)
       fileList = []
       combatData = []
@@ -236,85 +261,120 @@ class ArgParser:
           filepath = os.path.join(dirpath, f)
           timestamp = os.path.getmtime(filepath)
           if (timestamp >= start and timestamp <= end) or self.allTime:
-            fileList.append(filepath)
-            if self.win != ArgParser.RESULT_ALL or self.longest == True or self.longerthan != None or len(self.withNames) != 0:
+            if self.win != ArgParser.RESULT_ALL or self.longest == True or self.longerthan != None:
               print("Parsing {} log {}...".format(boss, f))
-              evtc = EvtcParser.EvtcLog(filepath)
-              combatData.append((filepath, evtc.combatTimeUsed, evtc.playerNames, evtc.cbtResult))
+              evtc = EvtcParser.EvtcLog(filepath, lifeThreshold=lifethreshold)
+              combatData.append(dict([
+                ("FilePath", filepath),
+                ("ElapsedTime", evtc.combatTimeUsed),
+                ("Players", evtc.playerNames),
+                ("BossId", evtc.bossId),
+                ("Result", evtc.cbtResult),
+                ("FullParsed", True),
+                ("BossName", boss),
+                ("RaidarSupported", True)
+              ]))
+            else:
+              print("Quick Parsing {} log {}...".format(boss, f))
+              evtc = EvtcParser.EvtcLog(filepath, quickParse=True)
+              combatData.append(dict([
+                ("FilePath", filepath),
+                ("Players", evtc.playerNames),
+                ("BossId", evtc.bossId),
+                ("FullParsed", False),
+                ("BossName", boss),
+                ("RaidarSupported", True)
+              ]))
             #elif self.longest == True or self.longerthan != None or len(self.withNames) != 0:
             #  print("Quick parsing {} log {}...".format(boss, f))
             #  evtc = EvtcParser.EvtcLog(filepath, quickParse=True)
             #  combatData.append((filepath, evtc.combatTimeUsed, evtc.playerNames))
                   
-      if len(fileList) == 0:
+      if len(combatData) == 0:
         continue
+
+      if gRaidarBossList:
+        for log in combatData:
+          log["RaidarSupported"] = False
+          for raidarBoss in gRaidarBossList:
+            if raidarBoss["id"] == log["BossId"]:
+              log["RaidarSupported"] = True
+              if log["BossId"] != 16286: #For Xera
+                log["BossName"] = raidarBoss["name"]
+              break
 
       if self.win != ArgParser.RESULT_ALL or self.longerthan != None or len(self.withNames) != 0:
         for cbtData in combatData:
-          if self.win == ArgParser.RESULT_WIN and not cbtData[3]:
-            fileList.remove(cbtData[0])
-          elif self.win == ArgParser.RESULT_FAIL and cbtData[3]:
-            fileList.remove(cbtData[0])
-          elif self.longerthan:
+          flag = True
+          if flag and self.win == ArgParser.RESULT_WIN and not cbtData["Result"]:
+            flag = False
+          if flag and self.win == ArgParser.RESULT_FAIL and cbtData["Result"]:
+            flag = False
+          if flag and self.longerthan:
             if self.longerthan > 0:
-              if cbtData[1] < (self.longerthan * 1000):
-                fileList.remove(cbtData[0])
+              if cbtData["ElapsedTime"] < (self.longerthan * 1000):
+                flag = False
             else:
-              if cbtData[1] > (self.longerthan * -1000):
-                fileList.remove(cbtData[0])
-          elif len(self.withNames) > 0:
+              if cbtData["ElapsedTime"] > (self.longerthan * -1000):
+                flag = False
+          if flag and len(self.withNames) > 0:
             found = False
             for name in self.withNames:
-              for player in cbtData[2]:
+              for player in cbtData["Players"]:
                 if player == name:
                   found = True
                   break
               if found:
                 break
             if not found:
-              fileList.remove(cbtData[0])
+              flag = False
+          if flag and not self.notOnlyRaidar and not cbtData["RaidarSupported"]:
+            flag = False
+          if flag:
+            fileList.append(cbtData)
+      else:
+        for cbtData in combatData:
+          if self.notOnlyRaidar or cbtData["RaidarSupported"]:
+            fileList.append(cbtData)
       if len(fileList) == 0:
         continue
       if self.last:
         maxtime = 0
         lastlog = None
         for log in fileList:
-          if os.path.getmtime(log) > maxtime:
-            maxtime = os.path.getmtime(log)
+          if os.path.getmtime(log["FilePath"]) > maxtime:
+            maxtime = os.path.getmtime(log["FilePath"])
             lastlog = log
         ret.append(lastlog)
         continue
       elif self.longest:
         maxtime = 0
         maxlog = None
-        for i in range(0, len(fileList)):
-          if combatData[i][2] > maxtime:
-            maxtime = combatData[i][2]
-            maxlog = fileList[i]
+        for log in fileList:
+          if log["ElapsedTime"] > maxtime:
+            maxtime = log["ElapsedTime"]
+            maxlog = log
         ret.append(maxlog)
       else:
-        for log in fileList:
-          ret.append(log)
+        ret.extend(fileList)
 
-
-    if self.win != 0:
-      print("\n", end="")
+    print("\n", end="")
 
     if self.sort:
       if self.sort == ArgParser.SORT_TIME:
-        ret.sort(key=lambda path:os.path.getmtime(path), reverse=self.sortReverse)
+        ret.sort(key=lambda log:os.path.getmtime(log["FilePath"]), reverse=self.sortReverse)
       elif self.sort == ArgParser.SORT_BOSS_NAME:
-        ret.sort(reverse=self.sortReverse)
+        ret.sort(key=lambda log: log["BossName"], reverse=self.sortReverse)
       elif self.sort == ArgParser.SORT_ENCOUNTER:
-        ret.sort(key=getBossOrder, reverse=self.sortReverse)
+        ret.sort(key=self.getBossOrder, reverse=self.sortReverse)
     return ret
 
-
-def getBossOrder(boss):
-  for index in range(0, len(bossList["Bosses"])):
-    if bossList["Bosses"][index]["Name"] == boss:
-      return index
-  return 0
+  def getBossOrder(self, log):
+    folderName = log["FilePath"].split(os.path.sep)[pathLevel]
+    for index in range(0, len(self.bossList["Bosses"])):
+      if self.bossList["Bosses"][index]["Name"] == folderName:
+        return index
+    return 0
 
 
 def searchBossName(bossList, name):
@@ -337,65 +397,81 @@ def searchBossName(bossList, name):
   return None
 
 def uploadDpsReport(path, gen="rh"):
-  dps_endpoint = "https://dps.report/uploadContent"
-  print("Uploading dps.report ({})".format(gen), path, "......")
-  with open(path, "rb") as file:
-    files = {
-      "file": file
-    }
-    param = {
-      "json": 1,
-      "generator": gen
-    }
-    response = requests.post(dps_endpoint, files=files, params=param)
-    if response.status_code == 200:
-      return response.json()['permalink']
-    else:
-      print("Upload file", path, "error:", response.status_code)
-      return False
+  try:
+    dps_endpoint = "https://dps.report/uploadContent"
+    print("Uploading dps.report ({})".format(gen), path, "......")
+    with open(path, "rb") as file:
+      files = {
+        "file": file
+      }
+      param = {
+        "json": 1,
+        "generator": gen
+      }
+      response = requests.post(dps_endpoint, files=files, params=param)
+      if response.status_code == 200:
+        return response.json()['permalink']
+      else:
+        print("Upload Dps.report Error:", response.status_code)
+        return False
+  except BaseException as e:
+    print("Upload Dps.report Error: ", str(e))
+    return False
 
 def gw2RaidarGetToken(user, paswd):
-  url = "https://www.gw2raidar.com/api/v2/token"
-  data = {
-    "username": user,
-    "password": paswd
-  }
-  response = requests.post(url, data=data)
-  if response.status_code == 200:
-    return response.json()["token"]
-  else:
+  try:
+    url = "https://www.gw2raidar.com/api/v2/token"
+    data = {
+      "username": user,
+      "password": paswd
+    }
+    response = requests.post(url, data=data)
+    if response.status_code == 200:
+      return response.json()["token"]
+    else:
+      return None
+  except BaseException as e:
+    print("Get Gw2 Raidar Token Error: ", str(e))
     return None
 
 def uploadGw2Raidar(path, token):
-  url = "https://www.gw2raidar.com/api/v2/encounters/new"
-  print("Uploading Gw2 Raidar", path, "......")
-  with open(path, "rb") as file:
-    files = {
-      "file": file
-    }
+  try:
+    url = "https://www.gw2raidar.com/api/v2/encounters/new"
+    print("Uploading Gw2 Raidar", path, "......")
+    with open(path, "rb") as file:
+      files = {
+        "file": file
+      }
+      headers = {
+        "Authorization": "Token " + token
+      }
+      response = requests.put(url, files=files, headers=headers)
+      if response.status_code != 200:
+        print("Upload Gw2 Raidar Error: ", response.status_code)
+        return False
+      return True
+  except BaseException as e:
+    print("Upload Gw2 Raidar Error: ", str(e))
+    return False
+
+def getGw2RaiderEncounterList(token, offset=0, limit=100):
+  try:
+    url = "https://www.gw2raidar.com/api/v2/encounters"
     headers = {
       "Authorization": "Token " + token
     }
-    response = requests.put(url, files=files, headers=headers)
-    if response.status_code != 200:
-      print("Upload Gw2 Raidar Error: ", response.status_code)
-      return False
-    return True
-
-def getGw2RaiderEncounterList(token, offset=0, limit=100):
-  url = "https://www.gw2raidar.com/api/v2/encounters"
-  headers = {
-    "Authorization": "Token " + token
-  }
-  param = {
-    "limit": limit,
-    "offset": offset
-  }
-  response = requests.get(url, headers=headers, params=param)
-  if response.status_code == 200:
-    return response.json()
-  else:
-    print("Get Raidar Encounter List Error: ", response.status_code)
+    param = {
+      "limit": limit,
+      "offset": offset
+    }
+    response = requests.get(url, headers=headers, params=param)
+    if response.status_code == 200:
+      return response.json()
+    else:
+      print("Get Raidar Encounter List Error: ", response.status_code)
+      return None
+  except BaseException as e:
+    print("Get Raidar Encounter List Error: ", str(e))
     return None
 
 def findGw2RaidarLog(path, token, limit=100):
@@ -406,9 +482,9 @@ def findGw2RaidarLog(path, token, limit=100):
       return "https://www.gw2raidar.com/encounter/" + encounter["url_id"]
   return None
 
-def findAllRaidarLog(files, token, bossList, timegap=20, maxcount=15, limit=100):
+def findAllRaidarLog(files, token, timegap=20, maxcount=15, limit=100):
   while True:
-    ret = syncFindAllRaidarLog(files, token, bossList, limit=limit)
+    ret = syncFindAllRaidarLog(files, token, limit=limit)
     if ret["LostCount"] == 0:
       return ret
     if maxcount == 0:
@@ -417,17 +493,17 @@ def findAllRaidarLog(files, token, bossList, timegap=20, maxcount=15, limit=100)
     sleep(timegap)
     maxcount -= 1
 
-def syncFindAllRaidarLog(files, token, bossList, limit=100):
+def syncFindAllRaidarLog(files, token, limit=100):
   encounters = getGw2RaiderEncounterList(token, limit=limit)
   ret = dict([("LostCount", 0), ("Results", [])])
-  for file in files:
+  for log in files:
     found = False
-    if not isRaidarAcceptable(file, bossList):
+    if not isRaidarAcceptable(log):
       ret["Results"].append(None)
       continue
     if encounters:
       for encounter in encounters["results"]:
-        if os.path.basename(file) == encounter["filename"]:
+        if os.path.basename(log["FilePath"]) == encounter["filename"]:
           ret["Results"].append("https://www.gw2raidar.com/encounter/" + encounter["url_id"])
           found = True
           break
@@ -437,29 +513,42 @@ def syncFindAllRaidarLog(files, token, bossList, limit=100):
       ret["LostCount"] += 1
   return ret
 
-def isRaidarAcceptable(log, bossList):
-  bossname = log.split(os.path.sep)[pathLevel]
-  for boss in bossList["Bosses"]:
-    if boss["Name"] == bossname:
-      return boss["Gw2RaidarAcceptable"]
-  return False
+def isRaidarAcceptable(log):
+  if not log["RaidarSupported"]:
+    return False
+  if log["FullParsed"] and log["ElapsedTime"] < (60 * 1000):
+    return False
+  return True
 
 def getRaidarBossAreas(token):
-  url = "https://www.gw2raidar.com/api/v2/areas"
-  headers = {
-    "Authorization": "Token " + token
-  }
-  response = requests.get(url, headers=headers)
-  if response.status_code == 200:
-    return response.json()
-  else:
-    print("Get Raidar Boss Areas Error: ", response.status_code)
+  try:
+    url = "https://www.gw2raidar.com/api/v2/areas"
+    headers = {
+      "Authorization": "Token " + token
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+      return response.json()
+    else:
+      print("Get Raidar Boss Areas Error: ", response.status_code)
+      return None
+  except BaseException as e:
+    print("Get Raidar Boss Areas Error", str(e))
     return None
 
+"""
+Global Variables
+"""
+gRaidarBossList = None
 
 """
   Main Start
 """
+
+if len(sys.argv) < 2:
+  print("You may need some argument")
+  print("Please check https://github.com/paddycup1/Gw2DpsLogUploader/blob/master/README.md")
+  sys.exit(0)
 
 if sys.argv[1] == "-init":
   raidarToken = gw2RaidarGetToken(sys.argv[2], sys.argv[3])
@@ -491,9 +580,23 @@ except BaseException as e:
 
 if sys.argv[1] == "-raidarlogin":
   config["Gw2RaidarToken"] = gw2RaidarGetToken(sys.argv[2], sys.argv[3])
+  if config["Gw2RaidarToken"] == None:
+    print("get token fail, please check your id/password.")
+    sys.exit(0)
   with open("Config.json", "w") as configFile:
     json.dump(config, configFile, indent=2)
+  print("get Raidar token success.")
   sys.exit(0)
+
+print("Get Boss List from Raidar...")
+ret = getRaidarBossAreas(config["Gw2RaidarToken"])
+if ret == None:
+  print("Retry after 1s...")
+  ret = getRaidarBossAreas(config["Gw2RaidarToken"])
+if ret == None:
+  print("Can't get Raidar supported boss list, consider all boss is supported")
+else:
+  gRaidarBossList = ret["results"]
 
 try:
   with open("BossList.json", "r") as bosslistfile:
@@ -510,36 +613,41 @@ pathLevel = len(config["LogPath"].split(os.path.sep))
 argParser = ArgParser(sys.argv, bossList)
 uploadFiles = argParser.filterLogs(config["LogPath"])
 
-raidheroesLinks = []
-eliteinsightLinks = []
 if argParser.raidar:
   for log in uploadFiles:
-    if isRaidarAcceptable(log, bossList):
-      Status = uploadGw2Raidar(log, config["Gw2RaidarToken"])
+    if isRaidarAcceptable(log):
+      Status = uploadGw2Raidar(log["FilePath"], config["Gw2RaidarToken"])
       if not Status:
         print("Retry after 1s...")
         sleep(1)
-        uploadGw2Raidar(log, config["Gw2RaidarToken"])
+        Status = uploadGw2Raidar(log["FilePath"], config["Gw2RaidarToken"])
+      if not Status:
+        log["RaidarSupported"] = False
+    else:
+      print("Raidar doesn't support", log["FilePath"])
   print("\n", end="")
 
 for log in uploadFiles:
-  if argParser.rh:
-    link = uploadDpsReport(log, gen="rh")
-    if not link:
-      print("Retry after 1s...")
-      sleep(1)
-      link = uploadDpsReport(log, gen="rh")
-    raidheroesLinks.append(link)
   if argParser.ei:
-    link = uploadDpsReport(log, gen="ei")
+    link = uploadDpsReport(log["FilePath"], gen="ei")
     if not link:
       print("Retry after 1s...")
       sleep(1)
-      link = uploadDpsReport(log, gen="ei")
-    eliteinsightLinks.append(link)
+      link = uploadDpsReport(log["FilePath"], gen="ei")
+    log["EliteInsightsLink"] = link
+  if argParser.rh:
+    link = uploadDpsReport(log["FilePath"], gen="rh")
+    if not link:
+      print("Retry after 1s...")
+      sleep(1)
+      link = uploadDpsReport(log["FilePath"], gen="rh")
+    log["RaidHeroesLink"] = link
   
 if argParser.raidar:
-  raidarlinks = findAllRaidarLog(uploadFiles, config["Gw2RaidarToken"], bossList)
+  raidarlinks = findAllRaidarLog(uploadFiles, config["Gw2RaidarToken"],
+    timegap=argParser.raidarWaitTime,
+    maxcount=argParser.raidarRetryCount,
+    limit=argParser.raidarSearchCount)
 
 if argParser.format == ArgParser.FORMAT_EMBED:
   output = OrderedDict()
@@ -549,20 +657,27 @@ if argParser.format == ArgParser.FORMAT_EMBED:
   output["thumbnail"] = dict([("url", "https://render.guildwars2.com/file/5866630DA52DCB5C423FB81ECF69FD071611E36B/1128644.png")])
   output["fields"] = []
   for index in range(0, len(uploadFiles)):
-    pathComponent = uploadFiles[index].split(os.path.sep)
+    pathComponent = uploadFiles[index]["FilePath"].split(os.path.sep)
     d = OrderedDict()
-    d["name"] = uploadFiles[index].split(os.path.sep)[pathLevel]
+    d["name"] = uploadFiles[index]["BossName"]
     value = []
-    if argParser.rh:
-      value.append("[RaidHeroes]({})".format(raidheroesLinks[index]))
     if argParser.ei:
-      value.append("[EliteInsight]({})".format(eliteinsightLinks[index]))
-    if argParser.raidar:
-      if raidarlinks["Results"][index]:
-        value.append("[Raidar]({})".format(raidarlinks["Results"][index]))
+      if uploadFiles[index]["EliteInsightsLink"]:
+        value.append("[EliteInsight]({})".format(uploadFiles[index]["EliteInsightsLink"]))
       else:
-        value.append("~~Raidar~~")
-        print("no result for", uploadFiles[index])
+        value.append("~~EliteInsight~~")
+    if argParser.rh:
+      if uploadFiles[index]["RaidHeroesLink"]:
+        value.append("[RaidHeroes]({})".format(uploadFiles[index]["RaidHeroesLink"]))
+      else:
+        value.append("~~RaidHeroes~~")
+    if argParser.raidar:
+      if isRaidarAcceptable(uploadFiles[index]):
+        if raidarlinks["Results"][index]:
+          value.append("[Raidar]({})".format(raidarlinks["Results"][index]))
+        else:
+          value.append("~~Raidar~~")
+          print("no result for", uploadFiles[index])
     
     d["value"] = value[0]
     for i in range(1, len(value)):
@@ -573,30 +688,50 @@ elif argParser.format == ArgParser.FORMAT_JSON:
   output = OrderedDict()
   output["Result"] = []
   for index in range(0, len(uploadFiles)):
-    pathComponent = uploadFiles[index].split(os.path.sep)
+    pathComponent = uploadFiles[index]["FilePath"].split(os.path.sep)
     d = OrderedDict()
-    d["Boss"] = pathComponent[pathLevel]
-    d["File"] = pathComponent[-1]
-    if argParser.rh:
-      d["RaidHeroes"] = raidheroesLinks[index]
+    d["Boss"] = uploadFiles[index]["BossName"]
+    d["File"] = uploadFiles[index]["FilePath"]
     if argParser.ei:
-      d["EliteInsight"] = eliteinsightLinks[index]
+      if uploadFiles[index]["EliteInsightsLink"]:
+        d["EliteInsight"] = uploadFiles[index]["EliteInsightsLink"]
+      else:
+        d["EliteInsight"] = "Upload fail"
+    if argParser.rh:
+      if uploadFiles[index]["RaidHeroesLink"]:
+        d["RaidHeroes"] = uploadFiles[index]["RaidHeroesLink"]
+      else:
+        d["RaidHeroes"] = "Upload fail"
     if argParser.raidar:
-      d["Raidar"] = raidarlinks["Results"][index]
+      if isRaidarAcceptable(uploadFiles[index]):
+        d["Raidar"] = raidarlinks["Results"][index]
+      else:
+        d["Raidar"] = "Not supported."
     output["Result"].append(d)
 elif argParser.format == ArgParser.FORMAT_PLAIN:
   if len(os.path.dirname(argParser.outputPath)) > 0 and not os.path.exists(os.path.dirname(argParser.outputPath)):
     os.makedirs(os.path.dirname(argParser.outputPath))
   with open(argParser.outputPath, "w") as outfile:
     for index in range(0, len(uploadFiles)):
-      pathComponent = uploadFiles[index].split(os.path.sep)
-      print("{}: {}".format(pathComponent[pathLevel], pathComponent[-1]), file=outfile)
-      if argParser.rh:
-        print("  Raid Heroes: ", raidheroesLinks[index], file=outfile)
+      pathComponent = uploadFiles[index]["FilePath"].split(os.path.sep)
+      print("{}: {}".format(uploadFiles[index]["BossName"], pathComponent[-1]), file=outfile)
       if argParser.ei:
-        print("  EliteInsight:", eliteinsightLinks[index], file=outfile)
-      if argParser.raidar and raidarlinks["Results"][index]:
-        print("  Gw2Raidar:   ", raidarlinks["Results"][index], file=outfile)
+        if uploadFiles[index]["EliteInsightsLink"]:
+          print("  EliteInsight:", uploadFiles[index]["EliteInsightsLink"], file=outfile)
+        else:
+          print("  EliteInsight: Upload fail", file=outfile)
+      if argParser.rh:
+        if uploadFiles[index]["RaidHeroesLink"]:
+          print("  Raid Heroes: ", uploadFiles[index]["RaidHeroesLink"], file=outfile)
+        else:
+          print("  Raid Heroes:  Upload fail", file=outfile)
+      if argParser.raidar:
+        if not isRaidarAcceptable(uploadFiles[index]):
+          print("  Gw2Raidar:    Unsupported", file=outfile)
+        elif raidarlinks["Results"][index]:
+          print("  Gw2Raidar:   ", raidarlinks["Results"][index], file=outfile)
+        else:
+          print("  Gw2Raidar:    Upload fail", file=outfile)
   print("All complete.")
   sys.exit(0)
 

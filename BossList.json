@@ -1,35 +1,32 @@
 {
-  "Bosses": [{
+  "Bosses": [
+    {
       "Name": "Vale Guardian",
       "Aliases": [
         "1-1",
         "VG"
-      ],
-      "Gw2RaidarAcceptable": true
+      ]
     },
     {
       "Name": "Gorseval the Multifarious",
       "Aliases": [
         "1-2",
         "Gorse"
-      ],
-      "Gw2RaidarAcceptable": true
+      ]
     },
     {
       "Name": "Sabetha the Saboteur",
       "Aliases": [
         "1-3",
         "Sab"
-      ],
-      "Gw2RaidarAcceptable": true
+      ]
     },
     {
       "Name": "Slothasor",
       "Aliases": [
         "2-1",
         "Sloth"
-      ],
-      "Gw2RaidarAcceptable": true
+      ]
     },
     {
       "Name": "Matthias Gabrel",
@@ -37,54 +34,49 @@
         "2-3",
         "Matt",
         "Matthias"
-      ],
-      "Gw2RaidarAcceptable": true
+      ]
     },
     {
       "Name": "Keep Construct",
       "Aliases": [
         "3-2",
         "KC"
-      ],
-      "Gw2RaidarAcceptable": true
+      ]
     },
     {
       "Name": "Xera",
       "Aliases": [
         "3-3"
       ],
-      "Gw2RaidarAcceptable": true
+      "LifeThreshold": 50
     },
     {
       "Name": "Cairn the Indomitable",
       "Aliases": [
         "4-1",
         "Cairn"
-      ],
-      "Gw2RaidarAcceptable": true
+      ]
     },
     {
       "Name": "Mursaat Overseer",
       "Aliases": [
         "4-2",
         "MO"
-      ],
-      "Gw2RaidarAcceptable": true
+      ]
     },
     {
       "Name": "Samarog",
       "Aliases": [
         "4-3",
         "Sama"
-      ],
-      "Gw2RaidarAcceptable": true
+      ]
     },
     {
       "Name": "Deimos",
       "Aliases": [
         "4-4"
       ],
-      "Gw2RaidarAcceptable": true
+      "LifeThreshold": 1000
     },
     {
       "Name": "Soulless Horror",
@@ -93,29 +85,47 @@
         "SH",
         "Desmina"
       ],
-      "Gw2RaidarAcceptable": true
+      "LifeThreshold": 50
     },
     {
       "Name": "Dhuum",
       "Aliases": [
         "5-4"
+      ]
+    },
+    {
+      "Name": "Conjured Amalgamate",
+      "Aliases": [
+        "6-1",
+        "CA"
+      ]
+    },
+    {
+      "Name": "Nikare",
+      "Aliases": [
+        "6-2",
+        "Nik"
+      ]
+    },
+    {
+      "Name": "Qadim",
+      "Aliases": [
+        "6-3"
       ],
-      "Gw2RaidarAcceptable": true
+      "LifeThreshold": 75
     },
     {
       "Name": "MAMA",
       "Aliases": [
         "99CM-1"
-      ],
-      "Gw2RaidarAcceptable": true
+      ]
     },
     {
       "Name": "Nightmare Oratuss",
       "Aliases": [
         "99CM-2",
         "Siax"
-      ],
-      "Gw2RaidarAcceptable": true
+      ]
     },
     {
       "Name": "Ensolyss of the Endless Torment",
@@ -123,8 +133,7 @@
         "99CM-3",
         "Ensolyss",
         "Enso"
-      ],
-      "Gw2RaidarAcceptable": true
+      ]
     },
     {
       "Name": "Skorvald the Shattered",
@@ -132,8 +141,7 @@
         "100CM-1",
         "Skor",
         "Skorvald"
-      ],
-      "Gw2RaidarAcceptable": true
+      ]
     },
     {
       "Name": "Artsariiv",
@@ -141,49 +149,24 @@
         "100CM-2",
         "Arts"
       ],
-      "Gw2RaidarAcceptable": true
+      "LifeThreshold": 100
     },
     {
       "Name": "Arkk",
       "Aliases": [
         "100CM-3"
       ],
-      "Gw2RaidarAcceptable": true
+      "LifeThreshold": 50
     },
     {
       "Name": "Large Kitty Golem",
-      "Aliases": [],
-      "Gw2RaidarAcceptable": false
+      "Aliases": []
     },
     {
       "Name": "Standard Kitty Golem",
       "Aliases": [
         "StdGolem"
-      ],
-      "Gw2RaidarAcceptable": true
-    },
-    {
-      "Name": "Conjured Amalgamate",
-      "Aliases": [
-        "6-1",
-        "CA"
-      ],
-      "Gw2RaidarAcceptable": true
-    },
-    {
-      "Name": "Nikare",
-      "Aliases": [
-        "6-2",
-        "Nik"
-      ],
-      "Gw2RaidarAcceptable": true
-    },
-    {
-      "Name": "Qadim",
-      "Aliases": [
-        "6-3"
-      ],
-      "Gw2RaidarAcceptable": true
+      ]
     }
   ],
   "Groups": [
@@ -279,6 +262,13 @@
         "Skorvald the Shattered",
         "Artsariiv",
         "Arkk"
+      ]
+    },
+    {
+      "Name": "golems",
+      "Bosses": [
+        "Standard Kitty Golem",
+        "Large Kitty Golem"
       ]
     }
   ]

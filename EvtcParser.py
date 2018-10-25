@@ -1,4 +1,6 @@
+from collections import OrderedDict
 import zipfile
+import json
 import sys
 import os
 
@@ -191,7 +193,7 @@ class CombatEvent1:
 
 
 class EvtcLog:
-  def __init__(self, filepath, quickParse=False):
+  def __init__(self, filepath, quickParse=False, lifeThreshold = 50):
     if zipfile.is_zipfile(filepath):
       with zipfile.ZipFile(filepath) as zipFile:
         namelist = zipFile.namelist()
@@ -203,12 +205,12 @@ class EvtcLog:
         except:
           raise BaseException("can't find evtc file in zip file {}".format(filepath))
         with zipFile.open(filename) as evtcFile:
-          self.parseEvtc(evtcFile, zipFile.infolist()[0].file_size, quickParse)
+          self.parseEvtc(evtcFile, lifeThreshold, zipFile.infolist()[0].file_size, quickParse)
     else:
       with open(filepath, "rb") as evtcFile:
-        self.parseEvtc(evtcFile, os.path.getsize(filepath), quickParse)
+        self.parseEvtc(evtcFile, lifeThreshold, os.path.getsize(filepath), quickParse)
   
-  def parseEvtc(self, evtc, size, quickParse):
+  def parseEvtc(self, evtc, lifeThreshold, size, quickParse):
     if evtc.read(4).decode("ascii") != "EVTC":
       raise BaseException("Input file isn't evtc file or standard zip.")
     self.dateText = evtc.read(8).decode("ascii")
@@ -216,19 +218,15 @@ class EvtcLog:
     self.bossId = int.from_bytes(evtc.read(2), byteorder="little", signed=False)
     #evtc.seek(16)
     evtc.read(1)
-    lifethreshold = 50
 
     if self.bossId == 16246:   #For Xera
       self.bossId = 16286
-    if self.bossId == 17949:   #For Artsariiv
-      lifethreshold = 10050
-    if self.bossId == 17154 or self.bossId == 16728834:
-      lifethreshold = 1000
 
     self.cbtResult = False
     self.playerNames = []
     self.agentCount = int.from_bytes(evtc.read(4), byteorder="little", signed=False)
     self.agents = []
+    self.bossName = ""
     playersAddr = []
     bossAddr = None
     for i in range(0, self.agentCount):
@@ -239,8 +237,9 @@ class EvtcLog:
         self.playerNames.append(agent.displayName)
         self.playerNames.append(agent.name)
       else:
-        if agent.specialID == self.bossId:
+        if bossAddr == None and agent.specialID == self.bossId:
           bossAddr = agent.addr
+          self.bossName = agent.name
 
     self.skillCount = int.from_bytes(evtc.read(4), byteorder="little", signed=False)
     self.skills = []
@@ -258,33 +257,89 @@ class EvtcLog:
         if not self.cbtResult and evtcLog.src_agent == bossAddr:
           if evtcLog.is_statechange == CbtStateChange.CBTS_CHANGEDEAD:
             self.cbtResult = True
-          elif evtcLog.is_statechange == CbtStateChange.CBTS_HEALTHUPDATE and evtcLog.dst_agent < lifethreshold:
+          elif lifeThreshold >= 0 and evtcLog.is_statechange == CbtStateChange.CBTS_HEALTHUPDATE and evtcLog.dst_agent < lifeThreshold:
             self.cbtResult = True
         self.combatEvents.append(evtcLog)
         data = evtc.read(CombatEvent.LEN)
 
       self.combatTimeUsed = self.combatEvents[-1].time - self.combatEvents[0].time
-    else:
-      data = evtc.read(CombatEvent.LEN)
-      firstLog = CombatEvent(data)
-      evtc.seek(size - CombatEvent.LEN)
-      data = evtc.read(CombatEvent.LEN)
-      lastLog = CombatEvent(data)
-      self.combatTimeUsed = lastLog.time - firstLog.time
+    #seek is broken in python 3.7
+    #else:
+    #  data = evtc.read(CombatEvent.LEN)
+    #  firstLog = CombatEvent(data)
+    #  evtc.seek(size - CombatEvent.LEN)
+    #  data = evtc.read(CombatEvent.LEN)
+    #  lastLog = CombatEvent(data)
+    #  self.combatTimeUsed = lastLog.time - firstLog.time
 
 if __name__ == "__main__":
+  if len(sys.argv) < 2:
+    print(sys.argv[0], "EvtcFile [-json]: dump evtc file.")
+    print(sys.argv[0], "SuccessEvtcFile -config: config specific boss in BossList by given log.")
+    sys.exit(0)
   log = EvtcLog(sys.argv[1])
-  with open("EvtcLog.txt", "w", encoding="utf8") as output:
-    print("BossId:", log.bossId, file=output)
-    print("Result:", log.cbtResult, file=output)
-    print("Agents:", file=output)
-    for agent in log.agents:
-      print(agent.name, end=" ", file=output)
-      if agent.isPlayer:
-        print(agent.displayName, agent.addr, file=output)
+  lastLifeChange = -1
+  bossAddr = 0
+  isDead = False
+  for agent in log.agents:
+    if not agent.isPlayer:
+      if agent.specialID == log.bossId:
+        bossAddr = agent.addr
+        break
+  for event in log.combatEvents:
+    if event.is_statechange == CbtStateChange.CBTS_HEALTHUPDATE and event.src_agent == bossAddr:
+      lastLifeChange = event.dst_agent
+    if event.is_statechange == CbtStateChange.CBTS_CHANGEDEAD and event.src_agent == bossAddr:
+      isDead = True
+  if len(sys.argv) > 2 and sys.argv[2] == "-config":
+    with open("BossList.json", "r") as listFile:
+      bossList = json.load(listFile)
+    for boss in bossList["Bosses"]:
+      if boss["Name"] == log.bossName:
+        if isDead:
+          if "LifeThreshold" in boss:
+            del boss["LifeThreshold"]
+        else:
+          boss["LifeThreshold"] = lastLifeChange + 30
+        with open("BossList.json", "w") as listFile:
+          json.dump(bossList, listFile, indent=2)
+        sys.exit(0)
+  else:
+    if len(sys.argv) > 2 and sys.argv[2] == "-json":
+      fileName = "EvtcLog.json"
+    else:
+      fileName = "EvtcLog.txt"
+    with open(fileName, "w", encoding="utf8") as output:
+      if len(sys.argv) > 2 and sys.argv[2] == "-json":
+        outputDict = OrderedDict()
+        outputDict["BossId"] = log.bossId
+        outputDict["LastLifeChange"] = lastLifeChange
+        outputDict["IsBossDead"] = isDead
+        outputDict["Agents"] = []
+        for agents in log.agents:
+          outputDict["Agents"].append(agents.__dict__)
+        json.dump(outputDict, output, indent=2)
+        outputDict["Skills"] = []
+        for skill in log.skills:
+          outputDict["Skills"].append(skill.__dict__)
+        outputDict["Events"] = []
+        for event in log.combatEvents:
+          outputDict["Events"].append(event.__dict__)
+        json.dump(outputDict, output, indent=2)
       else:
-        print(agent.specialID, agent.addr, file=output)
-    
-    print("Events:", file=output)
-    for event in log.combatEvents:
-      print("Src:", event.src_agent, "Dst:", event.dst_agent, "StateChange:", event.is_statechange, file=output)
+        print("BossId:", log.bossId, file=output)
+        print("Last Life Change:", lastLifeChange, file=output)
+        print("Is Boss Dead:", isDead, file=output)
+        print("Agents:", file=output)
+        for agent in log.agents:
+          print(" ", agent.name, end=" ", file=output)
+          if agent.isPlayer:
+            print(agent.displayName, agent.addr, file=output)
+          else:
+            print(agent.specialID, agent.addr, file=output)            
+        print("Events:", file=output)
+        for event in log.combatEvents:
+          if event.is_statechange == CbtStateChange.CBTS_HEALTHUPDATE and event.src_agent == bossAddr:        
+            lastLifeChange = event.dst_agent
+          print("  Src:", event.src_agent, "Dst:", event.dst_agent, "StateChange:", event.is_statechange, file=output)
+      

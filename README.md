@@ -61,9 +61,13 @@ Arguments order is meaningless, just put all argument you want in any order.
   * `raidar` or can be `rd` for short, is Gw2Raidar
 * `-o filename` : Output result to given file name. Default is `output/output.txt` if not given.
 * `-raidarlogin username password` : Retrieve account token from Gw2Raidar API. The token is needed for upload to Gw2Raidar.
-* `-init username password` : Generate default config file and retrieve Gw2Raidar account token by given username and password.
+* `-raidarwaittime 20` : Waiting time between retrying to get Raidar's encounter list, in second. The default value is 20.  
+* `-raidarretrycount 15` : Retry times when getting Raidar's encounter list. The default value is 15.  
+* `-raidarsearchcount 100` : The amount of logs get from Raidar in each try, this value should bigger than the log amount you uploaded. The default value is 100.  
+* `-notonlyraidar` or `-nord` : Upload the logs to dps.report even not in Raidar's support list. If this argument is not given, logs not in Raidar's support list will be skip.  
+* `-init username password` : Generate default config file and retrieve Gw2Raidar account token by given username and password.  
 * `-json` : Gererate json format output.
-* `-embed title [description]` : Generate discord embed format output, you can use `EmbedHelper.exe` in this repository to print embed to your discord server.  
+* `-embed title [description] [color code(#FFFFFF)]` : Generate discord embed format output, you can use `EmbedHelper.exe` in this repository to print embed to your discord server.  
 ![](https://i.imgur.com/8I4NB5D.png)
 
 ## Example
@@ -87,8 +91,7 @@ You can customer boss alias by edit this file:
       "Aliases": [
         "Any aliases you want, any name defined here can be used in -boss arguments"
       ],
-      "Gw2RaidarAcceptable": true,
-      "This is comment for Gw2RaidarAcceptable": "If the boss can't be analyzed by Gw2Raidar, Gw2RaidarAcceptable field should set to false. Or the upload tool will try to find this boss in Gw2Raidar encounter list after upload complete."
+      "LifeThreshold": "This value should be a number, please check below section before change this value."
     }
   ],
   "Groups": [
@@ -101,6 +104,19 @@ You can customer boss alias by edit this file:
   ]
 }
 ```
+
+## LifeThreshold in BossList.json
+
+This value affects how the tool judging a log is success or fail.  
+If this value is not given, the tool will judge the result by the boss dead event.  (This works in the most fo bosses, but has some exception, like Arkk,he actually doesn't **die** when you win the combat)
+If this value is given, the tool will judge the result by health update event, when the boss's health drop below the given value, you have won the combat. The unit of the value is 0.01%, so 10000 means 100%, 50 means 0.5%.  
+To know how to set this value, please use the tool attach in the package, `EvtcParser.exe`. Execute `EvtcParser.exe LOG_FILE` will generate a simple report names `EvtcLog.txt`, or `EvtcParser.exe LOG_FILE -json` will dump full log content to `EvtcLog.json`. (It may be a little big)  
+This tool will shows `Last Life Change` and `Is Boss Dead` at the top of the file, so you can set LifeThreshold according to this.  
+
+* If `Is Boss Dead` is true, just remove this field or set it to a negative value.
+* If `Is Boss Dead` is false, please check `Last Life Change`, this value means the last life change event record in log, please set `LifeThreshold` to a value higher but close to it. (I'll set about 20~50 higher than `Last Life Change`)
+
+Or execute `EvtcParser.exe LOG_FILE -config`, and give it **a success log** then it will config it automatically.
 
 # Embed Helper
 
