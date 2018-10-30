@@ -76,7 +76,7 @@
       "Aliases": [
         "4-4"
       ],
-      "LifeThreshold": 1000
+      "LifeThreshold": 50
     },
     {
       "Name": "Soulless Horror",

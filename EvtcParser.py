@@ -218,9 +218,11 @@ class EvtcLog:
     self.bossId = int.from_bytes(evtc.read(2), byteorder="little", signed=False)
     #evtc.seek(16)
     evtc.read(1)
-
+    bossIdForResult = self.bossId
     if self.bossId == 16246:   #For Xera
-      self.bossId = 16286
+      bossIdForResult = 16286
+    if self.bossId == 17154:
+      bossIdForResult = 24660
 
     self.cbtResult = False
     self.playerNames = []
@@ -237,8 +239,9 @@ class EvtcLog:
         self.playerNames.append(agent.displayName)
         self.playerNames.append(agent.name)
       else:
-        if bossAddr == None and agent.specialID == self.bossId:
+        if bossAddr == None and agent.specialID == bossIdForResult:
           bossAddr = agent.addr
+        if bossAddr == None and agent.specialID == self.bossId:
           self.bossName = agent.name
 
     self.skillCount = int.from_bytes(evtc.read(4), byteorder="little", signed=False)
@@ -339,7 +342,12 @@ if __name__ == "__main__":
             print(agent.specialID, agent.addr, file=output)            
         print("Events:", file=output)
         for event in log.combatEvents:
-          if event.is_statechange == CbtStateChange.CBTS_HEALTHUPDATE and event.src_agent == bossAddr:        
-            lastLifeChange = event.dst_agent
-          print("  Src:", event.src_agent, "Dst:", event.dst_agent, "StateChange:", event.is_statechange, file=output)
+          srcName = ""
+          dstName = ""
+          for agent in log.agents:
+            if agent.addr == event.src_agent:
+              srcName = agent.name
+            if agent.addr == event.dst_agent:
+              dstName = agent.name
+          print("  Src:", srcName, event.src_agent, "Dst:", dstName, event.dst_agent, "StateChange:", event.is_statechange, file=output)
       

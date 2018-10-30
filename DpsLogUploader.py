@@ -613,6 +613,10 @@ pathLevel = len(config["LogPath"].split(os.path.sep))
 argParser = ArgParser(sys.argv, bossList)
 uploadFiles = argParser.filterLogs(config["LogPath"])
 
+if len(uploadFiles) == 0:
+  print("No log to upload.")
+  sys.exit(0)
+
 if argParser.raidar:
   for log in uploadFiles:
     if isRaidarAcceptable(log):
