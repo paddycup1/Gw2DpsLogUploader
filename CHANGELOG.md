@@ -1,4 +1,4 @@
-# 2018 / 11 /23
+# 2018 / 11 /23 1.1.1 Add -healthover
 * Add `-healthover` command.
 * Known issue: can't determine Deimos's encounter result.
 
