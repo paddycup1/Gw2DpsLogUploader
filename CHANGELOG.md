@@ -1,8 +1,11 @@
-# 2018 / 11 /23 1.1.2 Add -healthover
+# 2018 / 11 / 23 1.1.3 Fix Deimos Bug
+* Fix deimos's health can't be calculate bug.
+
+# 2018 / 11 / 23 1.1.2 Add -healthover
 * Add `-healthover` command.
 * Known issue: can't determine Deimos's encounter result.
 
-# 2018 / 10 /31 1.1.1 Bug Fix
+# 2018 / 10 / 31 1.1.1 Bug Fix
 
 # 2018 / 10 / 25 1.1.0 Features Update
 * Add commands `-raidarwaittime`, `-raidarretrycount`, `-raidarsearchcount`, `-notonlyraidar`

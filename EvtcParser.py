@@ -219,10 +219,6 @@ class EvtcLog:
     #evtc.seek(16)
     evtc.read(1)
     bossIdForResult = self.bossId
-    if self.bossId == 16246:   #For Xera
-      bossIdForResult = 16286
-    if self.bossId == 17154:   #For Deimos
-      bossIdForResult = 24660
 
     self.cbtResult = False
     self.playerNames = []
@@ -258,7 +254,21 @@ class EvtcLog:
       data = evtc.read(CombatEvent.LEN)
       while len(data) == CombatEvent.LEN:
         evtcLog = CombatEvent(data)
-        if evtcLog.src_agent == bossAddr:
+        isBoss = False
+        for agent in self.agents:
+          if agent.addr == evtcLog.src_agent:
+            if self.bossId == 16246:   #For Xera
+                if agent.isNpc and (agent.specialID == 16286 or agent.specialID == self.bossId):
+                  isBoss = True
+            elif self.bossId == 17154: #For Deimos
+                if agent.isNpc and (agent.name.startswith("at24660") or agent.specialID == self.bossId):
+                  isBoss = True
+            else:
+              if agent.specialID == self.bossId:
+                isBoss = True
+            break
+
+        if isBoss:
           if not self.cbtResult:
             if evtcLog.is_statechange == CbtStateChange.CBTS_CHANGEDEAD:
               self.cbtResult = True
