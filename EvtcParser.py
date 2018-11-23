@@ -221,13 +221,14 @@ class EvtcLog:
     bossIdForResult = self.bossId
     if self.bossId == 16246:   #For Xera
       bossIdForResult = 16286
-    if self.bossId == 17154:
+    if self.bossId == 17154:   #For Deimos
       bossIdForResult = 24660
 
     self.cbtResult = False
     self.playerNames = []
     self.agentCount = int.from_bytes(evtc.read(4), byteorder="little", signed=False)
     self.agents = []
+    self.finalHealth = 10000
     self.bossName = ""
     playersAddr = []
     bossAddr = None
@@ -257,11 +258,14 @@ class EvtcLog:
       data = evtc.read(CombatEvent.LEN)
       while len(data) == CombatEvent.LEN:
         evtcLog = CombatEvent(data)
-        if not self.cbtResult and evtcLog.src_agent == bossAddr:
-          if evtcLog.is_statechange == CbtStateChange.CBTS_CHANGEDEAD:
-            self.cbtResult = True
-          elif lifeThreshold >= 0 and evtcLog.is_statechange == CbtStateChange.CBTS_HEALTHUPDATE and evtcLog.dst_agent < lifeThreshold:
-            self.cbtResult = True
+        if evtcLog.src_agent == bossAddr:
+          if not self.cbtResult:
+            if evtcLog.is_statechange == CbtStateChange.CBTS_CHANGEDEAD:
+              self.cbtResult = True
+            elif lifeThreshold >= 0 and evtcLog.is_statechange == CbtStateChange.CBTS_HEALTHUPDATE and evtcLog.dst_agent < lifeThreshold:
+              self.cbtResult = True
+          if evtcLog.is_statechange == CbtStateChange.CBTS_HEALTHUPDATE:
+            self.finalHealth = evtcLog.dst_agent
         self.combatEvents.append(evtcLog)
         data = evtc.read(CombatEvent.LEN)
 
@@ -281,7 +285,7 @@ if __name__ == "__main__":
     print(sys.argv[0], "SuccessEvtcFile -config: config specific boss in BossList by given log.")
     sys.exit(0)
   log = EvtcLog(sys.argv[1])
-  lastLifeChange = -1
+  lastLifeChange = log.finalHealth
   bossAddr = 0
   isDead = False
   for agent in log.agents:
@@ -290,8 +294,6 @@ if __name__ == "__main__":
         bossAddr = agent.addr
         break
   for event in log.combatEvents:
-    if event.is_statechange == CbtStateChange.CBTS_HEALTHUPDATE and event.src_agent == bossAddr:
-      lastLifeChange = event.dst_agent
     if event.is_statechange == CbtStateChange.CBTS_CHANGEDEAD and event.src_agent == bossAddr:
       isDead = True
   if len(sys.argv) > 2 and sys.argv[2] == "-config":

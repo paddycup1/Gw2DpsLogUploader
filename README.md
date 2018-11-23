@@ -25,6 +25,8 @@ There are two things need to give with arguments: which bosses and which time se
 Select bosses with `-boss` command.  
 Select time section with `-starttime` + `-endtime` combination or `-past`, `-today`, `-yesterday`, `-alltime`.
 
+**known issue: can't determine Deimos's encounter result.**  
+
 ## Supported Arguments
 
 All Arguments is case insensitive except the player name and embed title/description.  
@@ -50,7 +52,8 @@ Arguments order is meaningless, just put all argument you want in any order.
 * `-longerthan 5m[6s]` : Select the logs that fight time longer than given time.
 * `-shorterthan 5m[6s]` : Select the logs that fight time shorter than given time.
 * `-with name1 name2...` : Select the logs that contain given player name(can be either character name or display name).
-* `-win` and `-fail`: Select encounter result to be upload, the tool will upload both if not selected. 
+* `-win` and `-fail`: Select encounter result to be uploaded, the tool will upload both if not selected. 
+* `-healthover 54.32`: Filter logs by the boss's health, 100.00 ~ 0.00.
   * Note that above command will let the tool entirely parse every log which in selected boss and time section, **this will significantly increase the time cost**.
 * `-last` : Only upload the last log in each boss after filtered by other arguments, can't be used with `-longest`.
 * `-sort type` : Sort output result by given type, type can be `name`, `time` or `encounter`.

@@ -37,7 +37,7 @@ class ArgParser:
     self.sortReverse = False
     self.format = ArgParser.FORMAT_PLAIN
     self.outputPath = "output/output.txt"
-    self.rh = True
+    self.rh = False
     self.ei = True
     self.raidar = True
     self.longest = False
@@ -49,6 +49,7 @@ class ArgParser:
     self.raidarRetryCount = 15
     self.raidarSearchCount = 100
     self.notOnlyRaidar = False
+    self.healthOver = -1
 
     args = []
     for arg in inputArgs:
@@ -232,6 +233,9 @@ class ArgParser:
       elif args[index] == "-notonlyraidar" or args[index] == "-nord":
         self.notOnlyRaidar = True
         index += 1
+      elif args[index] == "-healthover":
+        self.healthOver = int(float(args[index + 1]) * 100)
+        index += 2
       else:
         index += 1
     if len(self.bosses) == 0:
@@ -261,7 +265,7 @@ class ArgParser:
           filepath = os.path.join(dirpath, f)
           timestamp = os.path.getmtime(filepath)
           if (timestamp >= start and timestamp <= end) or self.allTime:
-            if self.win != ArgParser.RESULT_ALL or self.longest == True or self.longerthan != None:
+            if self.win != ArgParser.RESULT_ALL or self.longest == True or self.longerthan != None or self.healthOver != -1:
               print("Parsing {} log {}...".format(boss, f))
               evtc = EvtcParser.EvtcLog(filepath, lifeThreshold=lifethreshold)
               combatData.append(dict([
@@ -272,7 +276,8 @@ class ArgParser:
                 ("Result", evtc.cbtResult),
                 ("FullParsed", True),
                 ("BossName", boss),
-                ("RaidarSupported", True)
+                ("RaidarSupported", True),
+                ("FinalHealth", evtc.finalHealth)
               ]))
             else:
               print("Quick Parsing {} log {}...".format(boss, f))
@@ -303,7 +308,7 @@ class ArgParser:
                 log["BossName"] = raidarBoss["name"]
               break
 
-      if self.win != ArgParser.RESULT_ALL or self.longerthan != None or len(self.withNames) != 0:
+      if self.win != ArgParser.RESULT_ALL or self.longerthan != None or len(self.withNames) != 0 or self.healthOver != -1:
         for cbtData in combatData:
           flag = True
           if flag and self.win == ArgParser.RESULT_WIN and not cbtData["Result"]:
@@ -329,6 +334,8 @@ class ArgParser:
             if not found:
               flag = False
           if flag and not self.notOnlyRaidar and not cbtData["RaidarSupported"]:
+            flag = False
+          if flag and self.healthOver != -1 and cbtData["FinalHealth"] > self.healthOver:
             flag = False
           if flag:
             fileList.append(cbtData)

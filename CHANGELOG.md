@@ -1,6 +1,8 @@
-# Change Log
+# 2018 / 11 /23
+* Add `-healthover` command.
+* Known issue: can't determine Deimos's encounter result.
 
-## 2018 / 10 / 25 1.1.0 Features Update
+# 2018 / 10 / 25 1.1.0 Features Update
 * Add commands `-raidarwaittime`, `-raidarretrycount`, `-raidarsearchcount`, `-notonlyraidar`
 * Remove `Gw2RaidarAcceptable` filed from `BossList.json`
 * Add optional field `LifeThreshold` into `BossList.json`
